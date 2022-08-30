@@ -446,7 +446,7 @@ module.exports.cTxToken2 = async (fromAccount, toAccount, tokenAccount, tokenAct
 
 // 
 module.exports.cCreateSc = async (scAction, actionTarget, sc, ownerPubkey, ownerPrikey, seed) => {
-    logger.debug("func - cTxToken");
+    logger.debug("func - cCreateSc");
 
     // Owner Public Key
     if (ownerPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
@@ -481,13 +481,17 @@ module.exports.cCreateSc = async (scAction, actionTarget, sc, ownerPubkey, owner
 }
 
 // 
-module.exports.cTxSc = async (scAction, sc, userPubkey, userPrikey, seed) => {
-    logger.debug("func - cTxToken");
+module.exports.cTxSc = async (scAction, sc, userPubkey, userPrikey, fromAccount, toAccount, seed) => {
+    logger.debug("func - cTxSc");
 
     // User Public Key
     if (userPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
     {
         return false;
+    }
+    
+    if (!isNaN(Number(fromAccount))) {
+        fromAccount = C_DEFINE.FROM_DEFAULT;
     }
 
     //
@@ -496,8 +500,8 @@ module.exports.cTxSc = async (scAction, sc, userPubkey, userPrikey, seed) => {
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
-        from_account : C_DEFINE.FROM_DEFAULT,
-        to_account : C_DEFINE.TO_DEFAULT,
+        from_account : fromAccount,
+        to_account : toAccount,
         action : scAction,
         contents : {
             sc : sc

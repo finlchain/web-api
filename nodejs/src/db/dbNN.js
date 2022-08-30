@@ -25,10 +25,14 @@ module.exports.querys = {
             selectCntByTxn : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX}`,
             // selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ?`,
             // selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ? AND json_value(contract,'$.contents.action') = ?`,
-            selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX} AND c_action = ?`,
+            // selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX} AND c_action = ?`,
+            // selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX} OR action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.ADD_USER} OR action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.CREATE_SC} OR action between ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.STT} and ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.END}`,
+            // selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action between ${config.CONTRACT_ACTIONS_JSON.CONTRACT.STT} and ${config.CONTRACT_ACTIONS_JSON.CONTRACT.END}`,
+            selectCntByTxnAction : `SELECT COUNT(*) as total_count FROM sc.sc_contents AS A INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key WHERE B.blk_num != 0`,
             // selectCntByTxnActionAndCreateTm : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ? AND ? <= create_tm AND create_tm <= ?`,
             // selectCntByTxnActionAndCreateTm : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ? AND json_value(contract,'$.contents.action') = ? AND ? <= create_tm AND create_tm <= ?`,
-            selectCntByTxnActionAndCreateTm : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX} AND c_action = ? AND ? <= create_tm AND create_tm <= ?`,
+            // selectCntByTxnActionAndCreateTm : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE action = ${define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX} AND c_action = ? AND ? <= create_tm AND create_tm <= ?`,
+            selectCntByTxnActionAndCreateTm : `SELECT COUNT(*) as total_count FROM sc.sc_contents AS A INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key WHERE ? <= A.create_tm AND A.create_tm <= ? AND B.blk_num != 0`,
             selectCntByMinMaxDbKey : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE ? <= db_key AND db_key <=? AND confirmed = ${true}`,
             selectCntByCreateTmAndSubnetId : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE ? <= create_tm AND create_tm <= ? AND subnet_id = ?`, 
             // selectCntByAccountNum : `SELECT COUNT(*) as total_count FROM sc.sc_contents WHERE from_account = ? OR to_account = ?`, 
@@ -297,6 +301,8 @@ module.exports.querys = {
                                 + `FROM account.account_users AS A INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key ` 
                                 + `WHERE B.blk_num > 0 AND ( A.owner_pk = ? OR A.super_pk = ? OR A.owner_pk = ? OR A.super_pk = ? ) `
                                 + `ORDER BY A.idx DESC LIMIT 1`,
+            // TGC
+            selectWalletInfo:  `SELECT account_id, account_num, owner_pk FROM account.account_users WHERE account_id = ?`,
 
         },
         account_ledgers : {
@@ -380,10 +386,9 @@ module.exports.querys = {
             //                             + `INNER JOIN account.account_users AS C ON A.my_account_num = C.account_num `
             //                             + `INNER JOIN account.account_tokens AS D ON A.action = D.action `
             //                             + `WHERE A.idx IN (SELECT MAX(idx) FROM account.account_ledgers WHERE action = ? GROUP BY my_account_num) ORDER BY balance*1 DESC LIMIT ?`,
-            selectLedgersUsersByActionAndLimit : `SELECT A.subnet_id, A.idx, A.create_tm, B.blk_num, A.db_key, A.my_account_num, A.account_num, A.action, D.name, D.symbol, A.amount, A.balance ` 
+            selectLedgersUsersByActionAndLimit : `SELECT A.subnet_id, A.idx, A.create_tm, B.blk_num, A.db_key, A.my_account_num, A.account_num, A.action, A.amount, A.balance ` 
                                         + `FROM account.account_ledgers AS A `
                                         + `INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key `
-                                        + `INNER JOIN account.account_tokens AS D ON A.action = D.action `
                                         + `WHERE A.idx IN (SELECT MAX(idx) FROM account.account_ledgers WHERE action = ? GROUP BY my_account_num) ORDER BY balance*1 DESC LIMIT ?`,
         },
         account_balance : {
@@ -398,7 +403,7 @@ module.exports.querys = {
         },
         account_sc : {
             //
-            selectCntByScAction : "SELECT COUNT(*) as total_count FROM account.account_sc WHERE sc_action = ?", 
+            selectCntByScAction : "SELECT COUNT(*) as total_count, SUM(JSON_VALUE(sc, '$.meta_data.amount')) AS sum_amount, SUM(JSON_VALUE(sc, '$.meta_data.ratio')) AS sum_ratio FROM account.account_sc WHERE sc_action = ?", 
             //
             selectByScAction : `SELECT * FROM account.account_sc WHERE sc_action = ? ORDER BY sc_action DESC LIMIT 1`, 
             //
@@ -406,7 +411,73 @@ module.exports.querys = {
             //
             selectByScActionAndActionTarget : `SELECT * FROM account.account_sc WHERE sc_action = ? and action_target != ?`, 
             //
-            selectByScActionAndActionTargetLimit : `SELECT * FROM account.account_sc WHERE sc_action = ? and action_target != ? ORDER BY idx DESC LIMIT 1`,
+            selectByScActionAndActionTargetLimit: `SELECT * FROM account.account_sc WHERE sc_action = ? and action_target != ? ORDER BY idx DESC LIMIT 1`,
+            
+            //NFT:
+            selectByScActionAndSubId: `SELECT * FROM account.account_sc WHERE sc_action = ? AND sub_id = ? ORDER BY idx DESC LIMIT 1`,
+
+            // selectNFTList: `SELECT C.name, C.symbol, B.sc_hash, A.action_target, A.sc_action, JSON_VALUE(A.sc, '$.node') AS nft_name FROM account.account_sc AS A `
+            //                 + `INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key INNER JOIN account.account_tokens AS C ON A.action_target = C.action WHERE A.action_target != A.sc_action ORDER BY A.create_tm DESC`,
+            // minted
+            selectNFTList1: `SELECT DISTINCT C.name, C.symbol, B.sc_hash, A.action_target, A.sc_action, JSON_VALUE(A.sc, '$.node') AS nft_name FROM account.account_sc AS A `
+                            + `INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key INNER JOIN account.account_tokens AS C ON A.action_target = C.action INNER JOIN account.account_sc AS D ON A.sc_action = D.action_target `
+                            + `WHERE D.create_tm IN(SELECT MAX(create_tm) FROM account.account_sc GROUP BY sc_action) ORDER BY D.create_tm DESC`,
+            // only created
+            selectNFTList2: `SELECT DISTINCT C.name, C.symbol, B.sc_hash, A.action_target, A.sc_action, JSON_VALUE(A.sc, '$.node') AS nft_name FROM account.account_sc AS A `
+                            + `INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key INNER JOIN account.account_tokens AS C ON A.action_target = C.action `
+                            + `WHERE A.create_tm IN(SELECT MAX(create_tm) FROM account.account_sc group by sc_action) ORDER BY A.create_tm DESC`,
+            selectUtilList: `SELECT C.name, C.symbol, B.sc_hash, A.action_target, A.sc_action, JSON_VALUE(A.sc, '$.node') AS nft_name FROM account.account_sc AS A `
+                            + `INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key INNER JOIN account.account_tokens AS C ON A.action_target = C.action`
+                            +` WHERE A.action_target = ? AND A.action_target != A.sc_action`,
+            // selectScList: `SELECT B.sc_hash, B.blk_num, A.create_tm, A.from_account_num, A.to_account_num, A.sub_id, A.action_target, A.sc_action `
+            selectScList: `SELECT B.blk_num, A.create_tm, A.from_account_num, A.to_account_num, B.sc_hash, A.sub_id `
+                            + `FROM account.account_sc AS A INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key WHERE A.sc_action = ? `
+                            + `ORDER BY create_tm DESC`,
+            selectScHolders: `SELECT B.blk_num, A.create_tm, B.sc_hash, C.account_id, A.sub_id FROM account.account_sc AS A `
+                            + `INNER JOIN block.blk_txs as B on A.db_key = B.db_key INNER JOIN account.account_users AS C ON A.to_account_num = C.account_num `
+                            + `WHERE A.idx IN(SELECT MAX(idx) FROM account.account_sc WHERE sc_action = ? GROUP BY sub_id) ORDER BY A.create_tm DESC`,
+                            // + `WHERE A.sc_action = ? GROUP BY A.sub_id DESC ORDER BY A.create_tm DESC`,
+                            // + `WHERE A.idx IN(SELECT MAX(idx) FROM account.account_sc GROUP BY sub_id) AND A.sc_action = ? GROUP BY A.sub_id DESC ORDER BY A.create_tm DESC`,
+            cntHolders: `SELECT COUNT(*) AS holders FROM account.account_sc WHERE from_account_num = 0 AND to_account_num != 0 AND sc_action = ? `,
+            selectScInfo: `SELECT C.name AS token_name, JSON_VALUE(A.sc, '$.node') AS nft_name, JSON_QUERY(A.sc, '$.collection') AS collection, B.sc_hash `
+                        + `FROM account.account_sc AS A INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key `
+                        + `INNER JOIN account.account_tokens AS C ON A.action_target = C.action WHERE sc_action = ? LIMIT 1`,
+            
+            selectUserNftInfo: `SELECT B.blk_num, B.sc_hash, A.create_tm, A.sub_id, A.sc_action, JSON_QUERY(A.sc, '$.meta_data') AS meta_data FROM account.account_sc AS A INNER JOIN block.blk_txs AS B on A.db_key = B.db_key `
+                            + `WHERE A.idx IN(SELECT MAX(idx) FROM account.account_sc GROUP BY sc_action, sub_id) AND A.to_account_num = ? `
+                            + `ORDER BY create_tm DESC`,
+            selectScUserNftInfo: `SELECT B.name, B.symbol, JSON_VALUE(A.sc, '$.node') AS nft_name `
+                                + `FROM account.account_sc AS A INNER JOIN account.account_tokens AS B ON A.action_target = B.action `
+                                + `WHERE A.action_target != A.sc_action AND A.sc_action = ?`,
+            selectNftName: `SELECT JSON_VALUE(sc, '$.node') AS nft_name FROM account.account_sc WHERE action_target != sc_action AND sc_action = ?`,
+            // cntSubIdTx: `SELECT COUNT(*) AS total_tx FROM account.account_sc WHERE from_account_num != 0 AND sc_action = ? AND sub_id = ? `,
+            cntSubIdTx: `SELECT COUNT(*) AS total_tx FROM account.account_sc WHERE sc_action = ? AND sub_id = ? `,
+            selectSubIdMinting: `SELECT A.create_tm, B.blk_num, B.sc_hash FROM account.account_sc AS A INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key `
+                                + `WHERE A.idx IN(SELECT MIN(idx) FROM account.account_sc WHERE sc_action = ? GROUP BY sub_id) AND A.sub_id = ?`,
+            selectSubIdDetail: `SELECT sub_id, JSON_QUERY(sc, '$.meta_data') AS meta_data, to_account_num AS owner_acc_num FROM account.account_sc `
+                                + `WHERE idx IN(SELECT MAX(idx) FROM account.account_sc WHERE sc_action = ? GROUP BY sub_id) AND sub_id = ?`,
+
+            selectSubIdTx: `SELECT B.blk_num, A.create_tm, B.sc_hash, A.from_account_num, A.to_account_num FROM account.account_sc AS A `
+                            + `INNER JOIN block.blk_txs AS B ON A.db_key = B.db_key WHERE sc_action = ? AND sub_id = ? ORDER BY create_tm DESC`,
+            sumAmount: `SELECT sc_action, SUM(JSON_VALUE(sc, '$.meta_data.amount')) AS sum_amount FROM account.account_sc GROUP BY sc_action`,
+            // sumRatiowithScAction: `SELECT sc_action, SUM(JSON_VALUE(sc, '$.meta_data.ratio')) AS sum_ratio FROM account.account_sc WHERE sc_action = ? GROUP BY sc_action`,
+            sumAmountwithScAction: `SELECT sc_action, SUM(JSON_VALUE(sc, '$.meta_data.amount')) AS sum_amount FROM account.account_sc WHERE sc_action = ? GROUP BY sc_action`,
+
+            selectRecentSubId: `SELECT DISTINCT sub_id FROM account.account_sc WHERE sc_action = ? ORDER BY sub_id DESC LIMIT 1`,
+            //
+            // TGC
+            selectPNumByAccount: `SELECT JSON_VALUE(A.sc, '$.meta_data.pNum') AS pNum FROM account.account_sc AS A INNER JOIN account.account_users AS B ON A.to_account_num = B.account_num WHERE B.account_id = ?`,
+            selectMetaData: `SELECT JSON_QUERY(sc, '$.meta_data') AS meta_data FROM account.account_sc `
+                            + `WHERE idx IN(SELECT MAX(idx) FROM account.account_sc WHERE sc_action = ? AND sub_id = ?) AND to_account_num = ?`,
+            selectUserNftbyPNum: `SELECT B.blk_num, B.sc_hash, A.create_tm, A.sub_id, A.sc_action, JSON_QUERY(A.sc, '$.meta_data') AS meta_data FROM account.account_sc AS A INNER JOIN block.blk_txs AS B on A.db_key = B.db_key `
+                                + `INNER JOIN account.account_users AS C ON A.to_account_num = C.account_num WHERE A.idx IN(SELECT MAX(idx) FROM account.account_sc GROUP BY sc_action, sub_id) AND C.account_id = ? `
+                                + `AND JSON_VALUE(A.sc, '$.meta_data.pNum') = ? ORDER BY create_tm DESC LIMIT 1`,
+            selectUserNftbyCreateTm: `SELECT B.blk_num, B.sc_hash, A.create_tm, A.sub_id, A.sc_action, JSON_QUERY(A.sc, '$.meta_data') AS meta_data FROM account.account_sc AS A INNER JOIN block.blk_txs AS B on A.db_key = B.db_key `
+                                + `INNER JOIN account.account_users AS C ON A.to_account_num = C.account_num WHERE A.idx IN(SELECT MAX(idx) FROM account.account_sc GROUP BY sc_action, sub_id) AND C.account_id = ? `
+                                + `AND A.create_tm = ? ORDER BY create_tm DESC LIMIT 1`,
+            // WALLET
+            selectUserNftTx: `SELECT A.create_tm, A.sc_action, B.sc_hash, A.from_account_num, A.to_account_num, A.sub_id, A.sc FROM account.account_sc AS A INNER JOIN block.blk_txs AS B on A.db_key = B.db_key `
+                            + `WHERE A.to_account_num = ? OR A.from_account_num = ? ORDER BY A.create_tm DESC LIMIT 10`,
         },
         account_join : {
             //

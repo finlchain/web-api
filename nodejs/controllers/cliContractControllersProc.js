@@ -25,6 +25,7 @@ const dbFBHandler = require("./../src/db/dbFBHandler.js");
 //
 const contractChecker = require("./../src/contract/contractChecker.js");
 const e = require("express");
+//
 
 // POST
 //
@@ -236,7 +237,7 @@ module.exports.contractExe = async (reqQuery) => {
 
             let contentsJson = request.txSc;
 
-            ret_msg = await this.createScProc(contentsJson);
+            ret_msg = await this.txScProc(contentsJson);
         }
         else
         {
@@ -384,9 +385,9 @@ module.exports.addUserProc = async (reqQuery) => {
                 // Get Kafka Info
                 // apiPath = `/kafka/broker/list?all`;
                 apiPath = `/kafka/broker/list?subNetId=${fbSubNetId}`;
-                logger.debug("KAFKA apiPath : " + apiPath);
+                logger.info("KAFKA apiPath : " + apiPath);
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
-                logger.debug("KAFKA apiRes : " + JSON.stringify(apiRes));
+                logger.info("KAFKA apiRes : " + JSON.stringify(apiRes));
 
                 if (apiRes.errorCode)
                 {
@@ -2013,7 +2014,7 @@ module.exports.createScProc = async (reqQuery) => {
                 if(!util.isJsonString(request.sc))
                 {
                     // Error Code
-                    logger.debug("Error -  Invalid sc json value");
+                    logger.error("Error -  Invalid sc json value");
                     ret_msg = { errorCode : define.ERR_MSG.ERR_JSON.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_JSON.MSG}};
                     break;
                 }
@@ -2021,10 +2022,10 @@ module.exports.createScProc = async (reqQuery) => {
                 // Check SC Action
                 //
                 if ((Number(request.scAction) < define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.STT) ||
-                    (Number(request.scAction) > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.END))
+                    (Number(request.scAction) > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.END))
                 {
                     // Error Code
-                    logger.debug("Error -  Invalid SC Action Range");
+                    logger.error("Error -  Invalid SC Action Range");
                     ret_msg = { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
                     break;
                 }
@@ -2038,7 +2039,7 @@ module.exports.createScProc = async (reqQuery) => {
                     if (Number(apiRes.contents.totalScActionCnt))
                     {
                         // Error Code
-                        logger.debug("Error -  Check SC Action");
+                        logger.error("Error -  Check SC Action");
                         ret_msg = { errorCode : define.ERR_MSG.ERR_EXIST_SC_ACTION.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_EXIST_SC_ACTION.MSG}};
                         break;
                     }
@@ -2055,7 +2056,7 @@ module.exports.createScProc = async (reqQuery) => {
                     if (apiRes.errorCode) // Not Existed
                     {
                         // Error Code
-                        logger.debug("Error -  Check Action Target");
+                        logger.error("Error -  Check Action Target");
                         ret_msg = { errorCode : define.ERR_MSG.ERR_SC_ACTION.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SC_ACTION.MSG}};
                         break;
                     }
@@ -2063,7 +2064,7 @@ module.exports.createScProc = async (reqQuery) => {
                     if (apiRes.contents.tAccountInfo.owner_pk !== request.ownerPubkey)
                     {
                         // Error Code
-                        logger.debug("Error -  Check Owner Public Key");
+                        logger.error("Error -  Check Owner Public Key");
                         ret_msg =  { errorCode : define.ERR_MSG.ERR_PUBKEY.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_PUBKEY.MSG}};
                         break;
                     }
@@ -2071,7 +2072,7 @@ module.exports.createScProc = async (reqQuery) => {
                 else
                 {
                     // Error Code
-                    logger.debug("Error -  Invalid Action Target Range");
+                    logger.error("Error -  Invalid Action Target Range");
                     ret_msg =  { errorCode : define.ERR_MSG.ERR_TOKEN.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_TOKEN.MSG}};
                     break;
                 }
@@ -2157,35 +2158,44 @@ module.exports.txScProc = async (reqQuery) => {
 
     try {
         if (request.hasOwnProperty("scAction") && 
-            request.hasOwnProperty("sc") &&
+            // request.hasOwnProperty("sc") &&
             request.hasOwnProperty("userPrikey") &&
             request.hasOwnProperty("userPrikeyPw") && 
-            request.hasOwnProperty("userPubkey"))
+            request.hasOwnProperty("userPubkey") &&
+            request.hasOwnProperty("toAccount") &&
+            request.hasOwnProperty("fromAccount") &&
+            request.hasOwnProperty("subId"))
         {
             logger.debug("scAction : " + request.scAction);
-            logger.debug("sc : " + request.sc);
+            // logger.debug("sc : " + request.sc);
             logger.debug("userPrikey : " + request.userPrikey);
             logger.debug("userPrikeyPw : " + request.userPrikeyPw);
             logger.debug("userPubkey : " + request.userPubkey);
+            logger.debug("toAccount : " + request.toAccount);
+            logger.debug("fromAccount : " + request.fromAccount);
+            logger.debug("subId : " + request.subId);
 
             do
             {
                 //
                 let apiPath;
                 let apiRes;
-
+                let sc;
                 //
-                if(!util.isJsonString(request.sc))
-                {
-                    // Error Code
-                    logger.debug("Error -  Invalid sc json value");
-                    break;
+                if (request.sc) {
+                    if(!util.isJsonString(request.sc))
+                    {
+                        // Error Code
+                        logger.debug("Error -  Invalid sc json value");
+                        break;
+                    }
+                    sc = request.sc;
                 }
 
                 // Check SC Action
                 //
                 if ((Number(request.scAction) < define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.STT) ||
-                    (Number(request.scAction) > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.END))
+                    (Number(request.scAction) > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.END))
                 {
                     // Error Code
                     logger.debug("Error -  Invalid SC Action Range");
@@ -2193,21 +2203,111 @@ module.exports.txScProc = async (reqQuery) => {
                     break;
                 }
 
-                //
+                // Check To Account
+                let toAccount = request.toAccount;
+                let toAccountInfo;
+                if (isNaN(Number(toAccount))) {
+                    if (toAccount.length == define.SEC_DEFINE.PUBLIC_KEY_LEN) {
+                        toAccountInfo = await dbNNHandler.getUserAccountByPubkey(toAccount);
+    
+                        if (toAccountInfo !== false) {
+                            toAccount = toAccountInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+    
+                    } else {
+                        toAccountInfo = await dbNNHandler.getUserAccountByAccountId(toAccount);
+    
+                        if (toAccountInfo !== false) {
+                            toAccount = toAccountInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+                    }
+                }
+                apiPath = `/account/chk/info?accountNum=${toAccount}`;
+                apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
+                if (apiRes.errorCode) {
+                    // Error Code
+                    logger.error("Error -  Check to Account");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                    break;
+                }
+                toAccountId = apiRes.contents.uAccountInfo.account_id;
+
+                // Check SC Action
                 apiPath = `/account/chk/info?scActionTarget=${request.scAction}`;
                 logger.debug("apiPath : " + apiPath);
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
                 logger.debug("apiRes : " + JSON.stringify(apiRes));
+                logger.debug("apiRes.errorCode : " + apiRes.errorCode);
                 if (apiRes.errorCode) // NOT Existed
                 {
+                    // Error Code
+                    logger.debug("Error -  Check SC Action");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_SC_ACTION.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SC_ACTION.MSG}};
+                    break;
+                }
+
+                // Check recent owner of sub_id
+                let chkRecentTx = await dbNNHandler.accountScActionAndSubId(request.scAction, request.subId);
+                logger.debug("chkRecentTx : " + JSON.stringify(chkRecentTx));
+                if(chkRecentTx.length && Number(request.fromAccount)) 
+                {
+                    logger.debug("NFT TX - USER to USER");
+                    apiPath = `/account/chk/info?accountNum=${request.fromAccount}`;
+                    apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
+
+                    if (apiRes.errorCode) {
                         // Error Code
-                        logger.debug("Error -  Check SC Action");
+                        logger.error("Error -  Check from Account");
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                        break;
+                    }
+
+                    if (chkRecentTx[0].to_account_num != apiRes.contents.uAccountInfo.account_num) {
+                        logger.error(`${request.fromAccount} is NOT current owner of ${request.subId}`);
+                        // Error Code
+                        logger.error("Error -  Check SC Action");
                         ret_msg =  { errorCode : define.ERR_MSG.ERR_SC_ACTION.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SC_ACTION.MSG}};
                         break;
+                    }
+
+                    apiPath = `/account/chk/info?accountNum=${chkRecentTx[0].to_account_num}`;
+                    apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
+                    if (apiRes.errorCode) {
+                        // Error Code
+                        logger.error("Error -  Check to Account");
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                        break;
+                    }
+
+                    if (apiRes.contents.uAccountInfo.owner_pk != request.userPubkey) {
+                        logger.error("Error -  Check from Account - Invalid Public Key");
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                        break;
+                    }
+
+                    if (chkRecentTx[0].sc) {
+                        sc = JSON.parse(chkRecentTx[0].sc);
+                        sc.owner = toAccountId;
+                        sc = JSON.stringify(sc);
+                    }
+                } else {
+                    logger.debug("NFT TX - MINTING");
                 }
 
                 //
-                let tcTxSc = await contractProc.cTxSc(Number(request.scAction), request.sc, request.userPubkey, request.userPrikey, request.userPrikeyPw);
+                let fromAccountHexStr = BigInt(request.fromAccount).toString(16);
+                // let toAccountHexStr = BigInt(request.toAccount).toString(16);
+                let toAccountHexStr = BigInt(toAccount).toString(16);
+                //
+                
+                // let tcTxSc = await contractProc.cTxSc(Number(request.scAction), request.sc, request.userPubkey, request.userPrikey, fromAccountHexStr, toAccountHexStr, request.userPrikeyPw);
+                let tcTxSc = await contractProc.cTxSc(Number(request.scAction), sc, request.userPubkey, request.userPrikey, fromAccountHexStr, toAccountHexStr, request.userPrikeyPw);
 
                 if (tcTxSc === false)
                 {
@@ -2267,6 +2367,154 @@ module.exports.txScProc = async (reqQuery) => {
                 else
                 {
                     ret_msg = { errorCode : define.ERR_MSG.ERR_KAFKA_TX.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_KAFKA_TX.MSG}};
+                }
+            } while(0);
+        }
+    } catch (err) {
+        logger.error("Error - ");
+        logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
+    }
+
+    return (ret_msg);
+}
+
+//
+module.exports.mintScProc = async (reqBody) => {
+    const request = reqBody;
+    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
+
+    logger.debug("func : mintScProc");
+
+    try {
+        if (request.hasOwnProperty("amount") && 
+            request.hasOwnProperty("toAccount") &&
+            request.hasOwnProperty("pNum"))
+        {
+            logger.debug("amount : " + request.amount);
+            logger.debug("toAccount : " + request.toAccount);
+
+            do
+            {
+                //
+                let apiPath;
+                let apiRes;
+                let recentPer;
+                let toAccount;
+                let scAction;
+
+                // Check toAccount
+                let userInfo = await dbNNHandler.getUserAccountByAccountId(request.toAccount);
+                if (userInfo !== false) {
+                    toAccount = userInfo.account_num;
+                    logger.debug("toAccount acc_num: " + toAccount);
+                } else {
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                    break;
+                }
+
+                // Check LEFT amount of NODE
+                let nodeList = define.NODE_LIST;
+                // 1. specific scAction - mapping with node name 
+                // if (request.hasOwnProperty("scAction")) {
+                if (request.hasOwnProperty("nodeName")) {
+
+                    let nodeName = (request.nodeName).toUpperCase();
+                    
+                    let node_sc = nodeList[`${nodeName}`].sc_action;
+                    
+                    // recentPer = await dbNNHandler.getSumofRatioScAction(request.scAction);
+                    recentPer = await dbNNHandler.getSumofAmountScAction(node_sc);
+                    scAction = recentPer.sc_action;
+                    if (recentPer.sum_amount < nodeList.TOTAL_PRICE) {
+                        if (nodeList.TOTAL_PRICE < Number(request.amount) + recentPer.sum_amount) {
+                            //ERROR CODE
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
+                            break;
+                        }
+                    } else {
+                        //ERROR CODE
+                        logger.error("unavailable to buy: " + request.scAction);
+                        ret_msg = { errorCode : define.ERR_MSG.ERR_SOLD_OUT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SOLD_OUT.MSG}};
+                        break;
+                    }
+                } else {
+                    // 2. any scAction
+                    recentPer = await dbNNHandler.getSumofAmount();
+                    for (let i = 0; i < recentPer.length; i++){
+                        // if (recentPer[i].sum_amount < nodeList.TOTAL_PRICE) {
+                            if (nodeList.TOTAL_PRICE >= Number(request.amount) + recentPer[i].sum_amount) {
+                                scAction = recentPer[i].sc_action;
+                                break;
+                            }
+                        // } else {
+                        //     //ERROR CODE
+                        //     ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
+                        //     break;
+                        // }
+                    }
+                }
+
+                logger.debug("scAction: " + scAction);
+                logger.debug("toAccount: " + toAccount);
+                
+
+                if (scAction && toAccount) {
+                    let subId = await dbNNHandler.getMintSubId(scAction);
+                    logger.debug("subId: " + subId);
+
+                    let ratioCal = (request.amount / define.NODE_LIST.TOTAL_PRICE * 100).toFixed(2);
+                    
+                    if (subId) {
+                        let sc = {
+                            sub_id: subId,
+                            owner: request.toAccount,
+                            meta_data: {
+                                ratio: ratioCal,
+                                amount: request.amount,
+                                pNum: request.pNum
+                            }
+                        }
+
+                        if (request.hasOwnProperty("seller")) {
+                            sc.meta_data.seller = request.seller;
+                        }
+
+                        if (request.hasOwnProperty("pSiteId")) {
+                            sc.meta_data.pSiteId = request.pSiteId;
+                        }
+
+                        let apiRoutePath = '/contract/sc/tx';
+                        let dir = nodeList.KEY_DIR;
+                        // let tkeyStoreJson = fs.readFile(dir, "binary", (err, data) => {
+                        //     if(err) {
+                        //         console.log(err);
+                        //     }
+                        //     console.log(data);
+                        // });
+
+                        let tkeyStoreJson = await fs.readFileSync(dir, 'binary');
+                        let tkeyStore = JSON.parse(tkeyStoreJson);
+                        let tokenPrikey = 'userPrikey';
+                        let tokenPrikeyVal = tkeyStore.edPrikeyFin;
+                        let tokenPrikeyPw = 'userPrikeyPw';
+                        let tokenPrikeyPwVal = process.env.UTIL_TKN_PW;
+                        let tokenPubkey = 'userPubkey';
+                        let tokenPubkeyVal = define.CONTRACT_DEFINE.ED_PUB_IDX + await cryptoUtil.getPubkeyNoFile(tkeyStore.edPubkeyPem);
+                        let tokenPrikeyEnc = encodeURIComponent(tokenPrikeyVal);
+                        let tokenPrikeyPwEnc = encodeURIComponent(tokenPrikeyPwVal);
+                        let tokenPubkeyEnc = encodeURIComponent(tokenPubkeyVal);
+                        let scActionKey = 'scAction', scKey = 'sc', fAccountKey = 'fromAccount', tAccountKey = 'toAccount', subIdKey = 'subId';
+
+                        let postData = `${scActionKey}=${scAction}&${scKey}=${JSON.stringify(sc)}&${tokenPrikey}=${tokenPrikeyEnc}&${tokenPrikeyPw}=${tokenPrikeyPwEnc}&${tokenPubkey}=${tokenPubkeyEnc}&${fAccountKey}=0&${tAccountKey}=${toAccount}&${subIdKey}=${subId}`;
+                        logger.debug("postData: " + postData);
+                        
+                        apiRes = await webApi.APICallProc(apiRoutePath, config.NFT_CONFIG, webApi.WEBAPI_DEFINE.METHOD.POST, postData);
+                        
+                        logger.debug("apiRes: " + JSON.stringify(apiRes));
+                        ret_msg = apiRes;
+                    }
+                } else {
+                    break;
                 }
             } while(0);
         }

@@ -151,6 +151,68 @@ module.exports.ERR_MSG ={
     ERR_UNKNOWN : {
         CODE : 9999, 
         MSG : "Unknown"
+    },
+
+    // TGC
+    ERR_REQ_PARAMS : {
+        CODE : 10000, 
+        MSG : "Check whether request parameters are satisfied."
+    },
+    ERR_APIKEY : {
+        CODE : 10001, 
+        MSG : "Invalid API Key"
+    },
+    ERR_TIMESTAMP : {
+        CODE : 10002, 
+        MSG : "Invalid TimeStamp"
+    },
+    ERR_VERSION : {
+        CODE : 10003, 
+        MSG : "Invalid Version"
+    },
+    ERR_REQUESTER : {
+        CODE : 10004, 
+        MSG : "Invalid Requester"
+    },
+    ERR_SIG : {
+        CODE : 10005, 
+        MSG : "Signature for this request is Invalid"
+    },
+    ERR_CURRENCY : {
+        CODE : 10006, 
+        MSG : "Invalid Currency"
+    },
+    ERR_PRICE : {
+        CODE : 10007, 
+        MSG : "Invalid Price Format"
+    },
+    ERR_AMOUNT : {
+        CODE : 10008, 
+        MSG : "Unable to buy this Node. No left for this price of amount."
+    },
+    ERR_SOLD_OUT : {
+        CODE : 10009, 
+        MSG : "Unable to buy this Node. It's SOLD OUT."
+    },
+    ERR_RES : {
+        CODE : 10010, 
+        MSG : "Internal server error"
+    },
+    ERR_PNUM : {
+        CODE : 10011, 
+        MSG : "Already existed pNum"
+    },
+    ERR_REFUND_ID : {
+        CODE : 10012, 
+        MSG : "Wrong refund Id"
+    },
+    ERR_NO_NFT : {
+        CODE : 10013, 
+        MSG : "This Wallet Name has NO NFT."
+    },
+    ERR_NO_NFT_2 : {
+        CODE : 10014, 
+        MSG : "CANNOT find the result with "
     }
 }
 
@@ -200,6 +262,36 @@ module.exports.DATA_HANDLER = {
     }, 
 }
 
+module.exports.CLUSTER_DEFINE = {
+    DEF_CLUSTER_WORKER_NUM : 2,
+    API_CLUSTER_WORKER_NUM : 10,
+    // MAX_CLUSTER_WORKER_NUM : 4+5,
+    //
+    API1_CLUSTER_WORKER_ID : 1,
+    API1_CLUSTER_WORKER_ID_STR : "1",
+    CLI_CLUSTER_WORKER_ID : 11,
+    CLI_CLUSTER_WORKER_ID_STR : "11",
+    NODE_NFT_CLUSTER_WORKER_ID : 12,
+    NODE_NFT_CLUSTER_WORKER_ID_STR : "12",
+    REDIS_CHANNEL_ERROR : -1,
+    EXIT_CODE : {
+        NORMAL : 0,
+        SOME_ERROR : 1
+    }
+}
+
+module.exports.REDIS_DEFINE = {
+    TX_ACK_LEN : {
+        HEX_STR_BN_LEN : 16,
+        HEX_STR_DB_KEY_LEN : 16
+    },
+    LOCAL_CHANNEL : {
+        TX_CONTRACT : "txContract",
+        TX_CONTRACT_ACK : "txContractAck",
+    },
+    REDIS_PUBSUB_CHECK : config.REDIS_PUBSUB_CHECK === ENABLED ? ENABLED : DISABLED
+}
+
 module.exports.SEC_DEFINE = {
     HASH_ALGO : "sha256",
     DIGEST : {
@@ -241,6 +333,10 @@ module.exports.SEC_DEFINE = {
     //     NET : "net",
     //     WALLET : "wallet"
     // }
+}
+
+module.exports.NODE_NFT_DEFINE = {
+    MAX_TX_CNT : 2,
 }
 
 module.exports.CONTRACT_DEFINE = {
@@ -299,6 +395,12 @@ module.exports.CONTRACT_DEFINE = {
             SC : {
                 STT : config.CONTRACT_ACTIONS_JSON.CONTRACT.SC.STT, 
                 END : config.CONTRACT_ACTIONS_JSON.CONTRACT.SC.END,
+            }, 
+
+            // NFT
+            NFT : {
+                STT : config.CONTRACT_ACTIONS_JSON.CONTRACT.NFT.STT, 
+                END : config.CONTRACT_ACTIONS_JSON.CONTRACT.NFT.END,
             }, 
         }, 
         
@@ -415,6 +517,12 @@ module.exports.START_MSG = "=================================================="
     + "\n==================================================";
 
 //
+module.exports.CMD = {
+    ENCODING:       'utf8', 
+    TEST_NODE_NFT:  'test node nft', 
+}
+
+//
 // https://www.thepolyglotdeveloper.com/2015/05/use-regex-to-test-password-strength-in-javascript/
 module.exports.REGEX = {
     NEW_LINE_REGEX: /\n+/, 
@@ -423,7 +531,7 @@ module.exports.REGEX = {
     HASH_REGEX: /^[a-z0-9+]{5,65}$/, 
     HEX_STR_REGEX: /^[a-fA-F0-9]+$/, 
     // ID_REGEX: /^(?=.*[A-Z])(?!.*[a-z])(?!.*[\s()|!@#\$%\^&\*])(?=.{4,})/, 
-    ID_REGEX: /^([A-Z0-9_]){4,16}$/,
+    ID_REGEX: /^([A-Z0-9_]){4,20}$/,
     PW_STRONG_REGEX : /^([a-zA-Z0-9!@$%^~*+=_-]){10,}$/, 
     PW_STRONG_COND_REGEX : /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?!.*[])(?=.*[!@$%^~*+=_-]).{10,}$/, 
     // PW_STRONG_COND_REGEX : /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?!.*[~#&()<>?:{}])(?=.*[!@$%^~*+=_-]).{10,}$/, 
@@ -434,7 +542,9 @@ module.exports.REGEX = {
 
 module.exports.FIXED_VAL = { 
     ONE_SEC : 1,
-    ONE_SEC_MS : 1000, 
+    ONE_SEC_MS : 1000,
+    FIVE_SEC_MS : 5000, 
+    FIVE_SEC : 5, 
     ONE_MIN_SEC : 60, 
     ONE_MIN_MS : 60000, 
     TEN_MIN_SEC : 600, 
@@ -479,4 +589,203 @@ module.exports.P2P_DEFINE = {
         END : 14
     }, 
     P2P_GPS_DECIMAL_POINT : 2
+}
+
+module.exports.NODE_LIST = {
+    TOTAL_PRICE: 1000000,
+    KEY_DIR: process.env.UTIL_TKN_KEY,
+    ZEUS: {
+        node: 'IS',
+        sc_action: 2684354606,
+    },
+    //
+    HERA: {
+        node: 'NN01',
+        sc_action: 2684354595,
+    },
+    ATHENA: {
+        node: 'NN02',
+        sc_action: 2684354596,
+    },
+    APHRODITE: {
+        node: 'NN03',
+        sc_action: 2684354597,
+    },
+    APOLLON: {
+        node: 'NN04',
+        sc_action: 2684354598,
+    },
+    ARES: {
+        node: 'NN05',
+        sc_action: 2684354599,
+    },
+    ARTEMIS: {
+        node: 'NN06',
+        sc_action: 2684354600,
+    },
+    DEMETER: {
+        node: 'NN07',
+        sc_action: 2684354601,
+    },
+    //
+    DIONYSUS: {
+        node: 'NN08',
+        sc_action: 2684354602,
+    },
+    HEPHAESTUS: {
+        node: 'NN09',
+        sc_action: 2684354603,
+    },
+    HERMES: {
+        node: 'NN10',
+        sc_action: 2684354604,
+    },
+    POSEIDON: {
+        node: 'NN11',
+        sc_action: 2684354605,
+    },
+    //
+    HESTIA: {
+        node: 'ISAG01',
+        sc_action: 2684354581,
+    },
+    HERCULES: {
+        node: 'ISAG02',
+        sc_action: 2684354582,
+    },
+    ASCLEPIUS: {
+        node: 'ISAG03',
+        sc_action: 2684354583,
+    },
+    EROS: {
+        node: 'ISAG04',
+        sc_action: 2684354584,
+    },
+    IRIS: {
+        node: 'ISAG05',
+        sc_action: 2684354585,
+    },
+    HEBE: {
+        node: 'ISAG06',
+        sc_action: 2684354586,
+    },
+    AILEITYIA: {
+        node: 'ISAG07',
+        sc_action: 2684354587,
+    },
+    //
+    PAN: {
+        node: 'ISAG08',
+        sc_action: 2684354588,
+    },
+    HARMONIA: {
+        node: 'ISAG09',
+        sc_action: 2684354589,
+    },
+    GAIMEDES: {
+        node: 'ISAG10',
+        sc_action: 2684354590,
+    },
+    PAIAN: {
+        node: 'ISAG11',
+        sc_action: 2684354591,
+    },
+    ENIO: {
+        node: 'ISAG12',
+        sc_action: 2684354592,
+    },
+    PHOBOS: {
+        node: 'ISAG13',
+        sc_action: 2684354593,
+    },
+    DEIMOS: {
+        node: 'ISAG14',
+        sc_action: 2684354594,
+    },
+    //
+    CHARITES: {
+        node: 'FBN01',
+        sc_action: 2684354560,
+    },
+    CRONOS: {
+        node: 'FBN02',
+        sc_action: 2684354561,
+    },
+    DIONE: {
+        node: 'FBN03',
+        sc_action: 2684354562,
+    },
+    EOS: {
+        node: 'FBN04',
+        sc_action: 2684354563,
+    },
+    GAIA: {
+        node: 'FBN05',
+        sc_action: 2684354564,
+    },
+    HADES: {
+        node: 'FBN06',
+        sc_action: 2684354565,
+    },
+    HELIOS: {
+        node: 'FBN07',
+        sc_action: 2684354566,
+    },
+    HECATE: {
+        node: 'FBN08',
+        sc_action: 2684354567,
+    },
+    HYPNOS: {
+        node: 'FBN09',
+        sc_action: 2684354568,
+    },
+    LATO: {
+        node: 'FBN10',
+        sc_action: 2684354569,
+    },
+    METIS: {
+        node: 'FBN11',
+        sc_action: 2684354570,
+    },
+    MOUSAI: {
+        node: 'FBN12',
+        sc_action: 2684354571,
+    },
+    NEMESIS: {
+        node: 'FBN13',
+        sc_action: 2684354572,
+    },
+    NIKE: {
+        node: 'FBN14',
+        sc_action: 2684354573,
+    },
+    PERSEPHONE: {
+        node: 'FBN15',
+        sc_action: 2684354574,
+    },
+    PSUKHE: {
+        node: 'FBN16',
+        sc_action: 2684354575,
+    },
+    RHEA: {
+        node: 'FBN17',
+        sc_action: 2684354576,
+    },
+    SELENE: {
+        node: 'FBN18',
+        sc_action: 2684354577,
+    },
+    THANATOS: {
+        node: 'FBN19',
+        sc_action: 2684354578,
+        walletAcc: 'DEV_USER_1'
+    },
+    TYCHE: {
+        node: 'FBN20',
+        sc_action: 2684354579,
+    },
+    URANOS: {
+        node: 'FBN21',
+        sc_action: 2684354580,
+    }
 }

@@ -116,6 +116,16 @@ module.exports.accounScActionAndTargetCheck = async (scAction) => {
     return query_result;
 }
 
+module.exports.accountScActionAndSubId = async (scAction, subId) => {
+    const conn = await dbUtil.getConn();
+
+    [query_result] = await dbUtil.exeQueryParam(conn, dbNN.querys.account.account_sc.selectByScActionAndSubId, [scAction, subId]);
+
+    await dbUtil.releaseConn(conn);
+
+    return query_result;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 module.exports.getScTxsCntAll = async () => {
@@ -219,7 +229,8 @@ module.exports.getScTxsCntPerDayByTokenAccountAction = async (accountAction, min
         //
         let sql = dbNN.querys.sc.sc_contents.selectCntByTxnActionAndCreateTm;
         
-        let query_result = await dbUtil.queryPre(sql, [accountAction, minMs, maxMs]);
+        // let query_result = await dbUtil.queryPre(sql, [accountAction, minMs, maxMs]);
+        let query_result = await dbUtil.queryPre(sql, [minMs, maxMs]);
         
         if(query_result.length) 
         {
@@ -1829,7 +1840,6 @@ module.exports.getAccountBalanceByAccountNumAndAction = async(accountNum, action
 //////////////////////////////////////////
 //
 module.exports.getAccountScCntByScAction = async (scAction) => {
-    logger.debug(scAction);
 
     try {
         //
@@ -1907,6 +1917,511 @@ module.exports.getAccountLedgersUsersByActionAndLimit = async (accountAction, li
         if(query_result.length) 
         {
             return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+// NFT
+module.exports.getNftList = async () => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectNFTList1;
+        let sql2 = dbNN.querys.account.account_sc.selectNFTList2;
+        
+        let query_result = await dbUtil.query(sql);
+        let query_result2 = await dbUtil.query(sql2);
+        
+        if (query_result2.length) {
+            query_result = query_result.concat(query_result2);
+        }
+        
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.selectCntByScAction;
+            for (let i = 0; i < query_result.length; i++) {
+
+                let cnt_result = await dbUtil.queryPre(sql, [query_result[i].sc_action]);
+                
+                if(cnt_result.length) 
+                {
+                    query_result[i].total_cnt = cnt_result[0].total_count;
+                    query_result[i].total_ratio = cnt_result[0].sum_ratio;
+                    query_result[i].total_amount = cnt_result[0].sum_amount;
+                }
+                else
+                {
+                    query_result[i].total_cnt = 0;
+                    query_result[i].total_ratio = 0;
+                    query_result[i].total_amount = 0;
+                }
+            }
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+//TODO: order by recent tx time
+module.exports.orderNftList = async () => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.orderByRecentTxTime;
+        
+        let query_result = await dbUtil.query(sql);
+        
+        if(query_result.length) 
+        {
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getActionTargetList = async (action_target) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectUtilList;
+        
+        let query_result = await dbUtil.queryPre(sql, [action_target]);
+        
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.selectCntByScAction;
+            for (let i = 0; i < query_result.length; i++) {
+
+                let cnt_result = await dbUtil.queryPre(sql, [query_result[i].sc_action]);
+                
+                if(cnt_result.length) 
+                {
+                    query_result[i].total_cnt = cnt_result[0].total_count;
+                }
+                else
+                {
+                    query_result[i].total_cnt = 0;
+                }
+                
+            }
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getActionTargetInfo = async (action_target) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectUtilList;
+        
+        let query_result = await dbUtil.queryPre(sql, [action_target]);
+        
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.selectCntByScAction;
+            for (let i = 0; i < query_result.length; i++) {
+
+                let cnt_result = await dbUtil.queryPre(sql, [query_result[i].sc_action]);
+                
+                if(cnt_result.length) 
+                {
+                    query_result[i].total_cnt = cnt_result[0].total_count;
+                }
+                else
+                {
+                    query_result[i].total_cnt = 0;
+                }
+                
+            }
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getSCActionTXList = async (scAction) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectScList;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction]);
+        
+        if(query_result.length) 
+        {
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getScDetailnfo = async (scAction) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectScInfo;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction]);
+        
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.cntHolders;
+            let holders_result = await dbUtil.queryPre(sql, [scAction]);
+
+            if (holders_result.length) {
+                query_result[0].holders = holders_result[0].holders;
+            } else {
+                query_result[0].holders = 0;
+            }
+
+            sql = dbNN.querys.account.account_sc.selectCntByScAction;
+            let cnt_result = await dbUtil.queryPre(sql, [scAction]);
+
+            if (cnt_result.length) {
+                query_result[0].total_cnt = cnt_result[0].total_count;
+            } else {
+                query_result[0].total_cnt = 0;
+            }
+
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getScHoldersInfo = async (scAction) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectScHolders;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction]);
+        
+        if(query_result.length) 
+        {
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getUserNftTxInfo = async (accountNum) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectUserNftTx;
+        
+        let query_result = await dbUtil.queryPre(sql, [accountNum, accountNum]);
+        
+        if(query_result.length) 
+        {
+            sql = dbNN.querys.account.account_sc.selectNftName;
+            for (let i = 0; i < query_result.length; i++){
+
+                let sc_result = await dbUtil.queryPre(sql, [query_result[i].sc_action]);
+                query_result[i].nft_name = sc_result[0].nft_name;
+            }
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getSubIdTx = async (scAction, subId) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectSubIdTx;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction, subId]);
+        
+        if(query_result.length) 
+        {
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getSubIdDetail = async (scAction, subId) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectSubIdDetail;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction, subId]);
+
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.selectSubIdMinting;
+            let minting_result = await dbUtil.queryPre(sql, [scAction, subId]);
+            if (minting_result.length) {
+                query_result[0].blk_num = minting_result[0].blk_num;
+                query_result[0].create_tm = minting_result[0].create_tm;
+                query_result[0].sc_hash = minting_result[0].sc_hash;
+            }
+
+            return query_result[0];
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getSubIdSc= async (scAction) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectScUserNftInfo;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction]);
+
+        if(query_result.length) 
+        {
+            return query_result[0];
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+module.exports.getSubIdTxCnt = async (scAction, subId) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.cntSubIdTx;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction, subId]);
+
+        if(query_result.length) 
+        {
+            return query_result[0].total_tx;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getSumofAmount = async () => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.sumAmount;
+        
+        let query_result = await dbUtil.query(sql);
+
+        if(query_result.length) 
+        {
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+module.exports.getSumofAmountScAction = async (scAction) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.sumAmountwithScAction;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction]);
+
+        if(query_result.length) 
+        {
+            return query_result[0];
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getMintSubId = async (scAction) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectRecentSubId;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction]);
+
+        if(query_result.length) 
+        {
+            return query_result[0].sub_id + 1;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+// For TGC
+module.exports.getWalletInfo = async (wName) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_users.selectWalletInfo;
+        
+        let query_result = await dbUtil.queryPre(sql, [wName]);
+
+        if(query_result.length) 
+        {
+            return query_result[0];
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getPNumInfo = async (wName) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectPNumByAccount;
+        
+        let query_result = await dbUtil.queryPre(sql, [wName]);
+
+        if(query_result.length) 
+        {
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getUserNftInfo = async (accountNum) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectUserNftInfo;
+        
+        let query_result = await dbUtil.queryPre(sql, [accountNum]);
+        
+        if(query_result.length) 
+        {
+            for (let i = 0; i < query_result.length; i++) {
+                let sql = dbNN.querys.account.account_sc.selectScUserNftInfo;
+                let node_result = await dbUtil.queryPre(sql, [query_result[i].sc_action]);
+
+                for (let j = 0; j < node_result.length; j++){
+                    if (node_result.length) {
+                        query_result[i].token_name = node_result[j].name;
+                        query_result[i].token_symbol = node_result[j].symbol;
+                        query_result[i].nft_name = node_result[j].nft_name;
+                    } else {
+                        query_result[i].token_name = '';
+                        query_result[i].token_symbol = '';
+                        query_result[i].nft_name = '';
+                    }
+                }
+            }
+
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getNftListbyPnum = async (wName, pNum) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectUserNftbyPNum;
+        
+        let query_result = await dbUtil.queryPre(sql, [wName, pNum]);
+
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.selectScUserNftInfo;
+            let node_result = await dbUtil.queryPre(sql, [query_result[0].sc_action]);
+
+            if (node_result.length) {
+                query_result[0].token_name = node_result[0].name;
+                query_result[0].token_symbol = node_result[0].symbol;
+                query_result[0].nft_name = node_result[0].nft_name;
+            } else {
+                query_result[0].token_name = '';
+                query_result[0].token_symbol = '';
+                query_result[0].nft_name = '';
+            }
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getNftListbyCreateTm = async (wName, createTm) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectUserNftbyCreateTm;
+        
+        let query_result = await dbUtil.queryPre(sql, [wName, createTm]);
+
+        if(query_result.length) 
+        {
+            let sql = dbNN.querys.account.account_sc.selectScUserNftInfo;
+            let node_result = await dbUtil.queryPre(sql, [query_result[0].sc_action]);
+
+            if (node_result.length) {
+                query_result[0].token_name = node_result[0].name;
+                query_result[0].token_symbol = node_result[0].symbol;
+                query_result[0].nft_name = node_result[0].nft_name;
+            } else {
+                query_result[0].token_name = '';
+                query_result[0].token_symbol = '';
+                query_result[0].nft_name = '';
+            }
+            return query_result;
+        }
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    return false;
+}
+
+module.exports.getNftMetaData = async (scAction, subId, toAccNum) => {
+    try {
+        //
+        let sql = dbNN.querys.account.account_sc.selectMetaData;
+        
+        let query_result = await dbUtil.queryPre(sql, [scAction, subId, toAccNum]);
+
+        if(query_result.length) 
+        {
+            return query_result[0];
         }
     } catch (err) {
         logger.error("Error - ");

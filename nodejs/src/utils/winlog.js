@@ -5,7 +5,7 @@ require('date-utils');
 
 //
 let LOG_LEVEL_FILE = "debug";
-let LOG_LEVEL_CONSOLE = "error";
+let LOG_LEVEL_CONSOLE = "debug";
 
 //let LOGFILE_PATH = './log/webapi.log';
 let LOGFILE_PATH = '/disk/data/log/webapi.log';

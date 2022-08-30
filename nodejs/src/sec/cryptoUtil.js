@@ -74,8 +74,8 @@ module.exports.decKeyNoFile = (keyBin, keySeed) => {
         //
         const encBinary = Buffer.from(keyBin, 'ascii');
         let encBinaryHexStr = encBinary.toString('hex');
-        logger.debug('encBinaryHexStr : ' + encBinaryHexStr);
-        logger.debug('keySeed : ' + keySeed);
+        // logger.debug('encBinaryHexStr : ' + encBinaryHexStr);
+        // logger.debug('keySeed : ' + keySeed);
 
         dec = cryptoSsl.aesDecBinary(encBinaryHexStr, keySeed, keySeed.length);
     }
@@ -395,4 +395,42 @@ module.exports.contentsDecFromBuf = (xPrikeyFile, xPubkey, encMsg) => {
     let plaintext = Buffer.from(plaintextHex, 'hex');
 
     return (plaintext);
+}
+
+module.exports.getPubkeyNoFile = async (pubkeyRaw) => {
+    //
+    // let pubkey_path = pubkeyPath;
+
+    //
+    let pemRead = pemreader.decomposePublicKey(pubkeyRaw);
+
+    //
+    // let publicKey = util.bytesToBuffer(pemRead.keyData.bytes).toString('hex');
+
+    // return publicKey;
+
+    // if (pubkey_path.includes("ed")) {
+    let pubkey;
+
+    pubkey = util.bytesToBuffer(pemRead.keyData.bytes);
+    return pubkey.toString('hex');
+
+    // }
+    // else {
+    //     let ec_point_x;
+    //     let ec_point_y;
+
+    //     ec_point_x = util.bytesToBuffer(pemRead.keyData.x).toString('hex');
+    //     ec_point_y = util.bytesToBuffer(pemRead.keyData.y).toString('hex');
+
+    //     const uncompressedpubkey = define.SEC_DEFINE.KEY_DELIMITER.SECP256_UNCOMPRESSED_DELIMITER + ec_point_x + ec_point_y;
+    //     const pubkey = ECDH.convertKey(uncompressedpubkey,
+    //         define.SEC_DEFINE.CURVE_NAMES.ECDH_SECP256R1_CURVE_NAME,
+    //         "hex",
+    //         "hex",
+    //         define.SEC_DEFINE.CONVERT_KEY.COMPRESSED);
+
+    //     return await pubkey;
+    // }
+    // return 'abcdef1234567890abcdef1234567890abcdef1234567890'
 }

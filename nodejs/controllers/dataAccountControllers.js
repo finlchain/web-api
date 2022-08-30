@@ -572,6 +572,32 @@ module.exports.getAccountList = async (req, res) => {
             logger.debug("scAction : Error");
         }
     }
+    // SC - NFT
+    else if (request.hasOwnProperty("nft"))
+    {
+        logger.debug("NFT");
+
+        let nftInfo = await dbNNHandler.getNftList();
+        if (nftInfo !== false)
+        {
+            logger.debug("NFT scAccountInfo : " + nftInfo);
+
+            let orderList = await dbNNHandler.orderNftList();
+            
+            ret_msg = {
+                errorCode : define.ERR_MSG.SUCCESS.CODE,
+                contents : {
+                    timestamp : Date.now(),
+                    NFT : nftInfo
+                }
+            }
+        }
+        else
+        {
+            logger.debug("nft : Error");
+        }
+    }
+    
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
 
@@ -1147,6 +1173,29 @@ module.exports.chkAccountInfo = async (req, res) => {
                 logger.debug("scAccountInfo : Error");
             }
         }
+
+        if (request.hasOwnProperty("actionTarget"))
+        {
+            logger.debug("actionTarget : " + request.actionTarget);
+
+            let scAccountInfo = await dbNNHandler.getActionTargetInfo(request.actionTarget);
+            if (scAccountInfo !== false)
+            {
+                logger.debug("scAccountInfo : " + scAccountInfo);
+
+                ret_msg = {
+                    errorCode : define.ERR_MSG.SUCCESS.CODE,
+                    contents : {
+                        timestamp : Date.now(),
+                        scAccountInfo : scAccountInfo
+                    }
+                }
+            }
+            else
+            {
+                logger.debug("scAccountInfo : Error");
+            }
+        }
     } catch (err) {
         logger.error("Error - ");
     }
@@ -1161,7 +1210,7 @@ module.exports.chkAccountCnt = async (req, res) => {
     const request = req.query;
     let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
 
-    logger.debug("func : chkAccountInfo");
+    logger.debug("func : chkAccountCnt");
 
     try {
         // SC
@@ -1188,3 +1237,314 @@ module.exports.chkAccountCnt = async (req, res) => {
 
     res.send(ret_msg);
 }
+
+module.exports.chkNftInfo = async (req, res) => {
+    const request = req.query;
+    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
+
+    logger.debug("func : chkNftInfo");
+
+    try {
+        // SC
+        do {
+            if (request.hasOwnProperty("targetAction"))
+            {
+                logger.debug("targetAction : " + request.targetAction);
+    
+                let nftTargetActionInfo = await dbNNHandler.getActionTargetList(request.targetAction);
+                if (nftTargetActionInfo !== false)
+                {
+                    logger.debug("nftTargetActionInfo");
+        
+                    ret_msg = {
+                        errorCode : define.ERR_MSG.SUCCESS.CODE,
+                        contents : {
+                            timestamp: Date.now(),
+                            action_target: request.targetAction,
+                            NFT : nftTargetActionInfo
+                        }
+                    }
+                }
+                else
+                {
+                    logger.debug("NFT targetAction : Error");
+                }
+            }
+    
+            if (request.hasOwnProperty("scAction"))
+            {
+                logger.debug("scAction : " + request.scAction);
+    
+                if (request.hasOwnProperty("subId")) {
+                    if (request.subId == 0) {
+                        res.send(ret_msg);
+                    }
+                    let subIdInfo = await dbNNHandler.getSubIdDetail(request.scAction, request.subId);
+                    let ScInfo = await dbNNHandler.getSubIdSc(request.scAction);
+                    let subIdTxCnt = await dbNNHandler.getSubIdTxCnt(request.scAction, request.subId);
+                    let subIdTxList = await dbNNHandler.getSubIdTx(request.scAction, request.subId);
+                    if (subIdInfo !== false)
+                    {
+                        logger.debug("subIdInfo");
+            
+                        ret_msg = {
+                            errorCode : define.ERR_MSG.SUCCESS.CODE,
+                            contents : {
+                                timestamp: Date.now(),
+                                node: ScInfo,
+                                NFT: subIdInfo,
+                                total_tx: subIdTxCnt,
+                                tx_list: subIdTxList
+                            }
+                        }
+                    }
+                    else
+                    {
+                        logger.debug("NFT scAction & subId : Error");
+                    }
+    
+                } else {
+                    let nftScActionInfo = await dbNNHandler.getSCActionTXList(request.scAction);
+                    if (nftScActionInfo !== false)
+                    {
+                        logger.debug("nftScActionInfo");
+            
+                        ret_msg = {
+                            errorCode : define.ERR_MSG.SUCCESS.CODE,
+                            contents : {
+                                timestamp: Date.now(),
+                                sc_action: request.scAction,
+                                NFT : nftScActionInfo
+                            }
+                        }
+                    }
+                    else
+                    {
+                        logger.debug("NFT scAction : Error");
+                    }
+                }
+            }
+    
+            if (request.hasOwnProperty("scDetail"))
+            {
+                logger.debug("scDetail : " + request.scDetail);
+    
+                let nftSCInfo = await dbNNHandler.getScDetailnfo(request.scDetail);
+                if (nftSCInfo !== false)
+                {
+                    logger.debug("nftSCInfo");
+        
+                    ret_msg = {
+                        errorCode : define.ERR_MSG.SUCCESS.CODE,
+                        contents : {
+                            timestamp: Date.now(),
+                            sc_action: request.scDetail,
+                            NFT : nftSCInfo
+                        }
+                    }
+                }
+                else
+                {
+                    logger.debug("NFT scDetail : Error");
+                }
+            }
+    
+            if (request.hasOwnProperty("holders"))
+            {
+                logger.debug("holders : " + request.holders);
+    
+                let holdersInfo = await dbNNHandler.getScHoldersInfo((request.holders));
+                if (holdersInfo !== false)
+                {
+                    logger.debug("holdersInfo");
+        
+                    ret_msg = {
+                        errorCode : define.ERR_MSG.SUCCESS.CODE,
+                        contents : {
+                            timestamp: Date.now(),
+                            sc_action: request.holders,
+                            holders : holdersInfo
+                        }
+                    }
+                }
+                else
+                {
+                    logger.debug("NFT holders : Error");
+                }
+            }
+    
+            // for BE
+            if (request.hasOwnProperty("user"))
+            {
+                logger.debug("user : " + request.user);
+    
+                let user = request.user;
+                let userInfo;
+    
+                if (isNaN(Number(user))) {
+                    if (user.length == define.SEC_DEFINE.PUBLIC_KEY_LEN) {
+                        userInfo = await dbNNHandler.getUserAccountByPubkey(user);
+    
+                        if (userInfo !== false) {
+                            user = userInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+    
+                    } else {
+                        userInfo = await dbNNHandler.getUserAccountByAccountId(user);
+    
+                        if (userInfo !== false) {
+                            user = userInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+                    }
+                }
+    
+                if (Number(user)) {
+                    let userNftInfo = await dbNNHandler.getUserNftInfo(user);
+        
+                    if (userNftInfo !== false)
+                    {
+                        logger.debug("userNftInfo");
+            
+                        ret_msg = {
+                            errorCode : define.ERR_MSG.SUCCESS.CODE,
+                            contents : {
+                                timestamp: Date.now(),
+                                account_num: user,
+                                NFT : userNftInfo
+                            }
+                        }
+                    }
+                    else
+                    {    
+                        // res.send(ret_msg);
+                        logger.debug("NFT user Detail : Error");
+                        ret_msg = { errorCode : define.ERR_MSG.ERR_NO_NFT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_NFT.MSG}};
+                        break;
+                    }
+                }
+            }
+    
+            // TODO: for users
+            if (request.hasOwnProperty("holder"))
+            {
+                logger.debug("user : " + request.holder);
+    
+                let user = request.holder;
+                let userInfo;
+    
+                if (isNaN(Number(holder))) {
+                    if (holder.length == define.SEC_DEFINE.PUBLIC_KEY_LEN) {
+                        userInfo = await dbNNHandler.getUserAccountByPubkey(holder);
+    
+                        if (userInfo !== false) {
+                            holder = userInfo.account_num;
+                            logger.error("user : " + holder);
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+    
+                    } else {
+                        userInfo = await dbNNHandler.getUserAccountByAccountId(holder);
+    
+                        if (userInfo !== false) {
+                            holder = userInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+                    }
+                }
+    
+                if (Number(holder)) {
+                    let userNftInfo = await dbNNHandler.getUserNftInfo(holder);
+        
+                    if (userNftInfo !== false)
+                    {
+                        logger.debug("userNftInfo");
+            
+                        ret_msg = {
+                            errorCode : define.ERR_MSG.SUCCESS.CODE,
+                            contents : {
+                                timestamp: Date.now(),
+                                account_num: holder,
+                                NFT : userNftInfo
+                            }
+                        }
+                    }
+                    else
+                    {    
+                        // res.send(ret_msg);
+                        logger.debug("NFT holder Detail : Error");
+                        break;
+                    }
+                }
+            }
+
+            if (request.hasOwnProperty("userTx"))
+            {
+                logger.debug("userTx : " + request.userTx);
+    
+                let user = request.userTx;
+                let userInfo;
+
+                if (isNaN(Number(user))) {
+                    if (user.length == define.SEC_DEFINE.PUBLIC_KEY_LEN) {
+                        userInfo = await dbNNHandler.getUserAccountByPubkey(user);
+                        if (userInfo !== false) {
+                            user = userInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+    
+                    } else {
+                        userInfo = await dbNNHandler.getUserAccountByAccountId(user);
+                        if (userInfo !== false) {
+                            user = userInfo.account_num;
+                        } else {
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                            break;
+                        }
+                    }
+                }
+
+                if (Number(user)) {
+                    let userNftTxInfo = await dbNNHandler.getUserNftTxInfo(user);
+                    if (userNftTxInfo !== false)
+                    {
+                        logger.debug("userNftInfo");
+            
+                        ret_msg = {
+                            errorCode : define.ERR_MSG.SUCCESS.CODE,
+                            contents : {
+                                timestamp: Date.now(),
+                                account_num: user,
+                                NFT : userNftTxInfo
+                            }
+                        }
+                    }
+                    else
+                    {    
+                        logger.error("NFT user tx Detail : Error");
+                        break;
+                    }
+                }
+            }
+        } while (0);
+        
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    logger.debug("ret_msg : " + JSON.stringify(ret_msg));
+
+    res.send(ret_msg);
+}
+

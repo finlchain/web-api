@@ -35,6 +35,7 @@ router.post("/tx/token", controller.txToken); // deprecated
 // SC
 router.post("/sc/create", controller.createSc);
 router.post("/sc/tx", controller.txSc); 
+router.post("/sc/mint", controller.mintSc); 
 
 router.post("/create/sc", controller.createSc); // deprecated
 router.post("/tx/sc", controller.txSc); // deprecated

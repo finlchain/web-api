@@ -106,7 +106,7 @@ module.exports.APICall = async (httpConfig, data) => {
     return ret;
 }
 
-module.exports.APICallProc = async (apiPath, config, method, postData, api_key) => {
+module.exports.APICallProc = async (apiPath, config, method, postData) => {
 // module.exports.APICallProc = async (apiPath, config, method, postData) => {
     let webApiConfig = util.copyObj(config);
 
@@ -114,15 +114,9 @@ module.exports.APICallProc = async (apiPath, config, method, postData, api_key) 
     webApiConfig.method = method;
     
     // if postData exists, change 'Content-Type' of Header
-    if (postData) {
+    if(!util.isJsonString(postData))
+    {
         webApiConfig.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    
-        // if api_key exists, insert the key to Header
-        if (api_key) {
-            webApiConfig.headers['puri-api-key'] = api_key;
-            logger.debug("inserted api key : " + api_key);
-            logger.debug("api key parsed from header : " + webApiConfig.headers['puri-api-key']);
-        }
     }
 
     let apiRes = await this.APICall(webApiConfig, postData);

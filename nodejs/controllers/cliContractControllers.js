@@ -479,3 +479,21 @@ module.exports.txSc = async (req, res) => {
 
     res.send(ret_msg);
 }
+
+//
+module.exports.mintSc = async (req, res) => {
+    const reqBody = req.body;
+    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
+
+    logger.debug("func : mintSc");
+
+    try {
+        ret_msg = await cliContractProc.mintScProc(reqBody);
+    } catch (err) {
+        logger.error("Error - ");
+    }
+
+    logger.debug("ret_msg : " + JSON.stringify(ret_msg));
+
+    res.send(ret_msg);
+}

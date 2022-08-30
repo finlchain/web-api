@@ -9,6 +9,7 @@
     "stop": "pm2 delete webApi"
   },
   "dependencies": {
+    "async-sema": "^3.1.1",
     "buffer-xor": "^2.0.2",
     "cluster": "^0.7.7",
     "cookie-parser": "^1.4.5",

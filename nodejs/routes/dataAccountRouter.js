@@ -20,4 +20,6 @@ router.get("/chk/info", controller.chkAccountInfo);
 
 router.get("/chk/cnt", controller.chkAccountCnt);
 
+router.get("/nft", controller.chkNftInfo);
+
 module.exports = router;

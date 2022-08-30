@@ -19,6 +19,8 @@ const ctrlNetRouter = require("./routes/ctrlNetRouter");
 //
 const cliContractRouter = require("./routes/cliContractRouter");
 const cliWalletRouter = require("./routes/cliWalletRouter");
+const cliNodeNftRouter = require("./routes/cliNodeNftRouter");
+const cliUserRouter = require("./routes/cliUserRouter");
 //
 const nodeRouter = require("./routes/nodeRouter");
 
@@ -98,6 +100,12 @@ app.use('/contract', cliContractRouter);
 app.use('/wallet', cliWalletRouter);
 //
 app.use('/node', nodeRouter);
+//
+app.use('/nft', cliNodeNftRouter);
+//
+app.use('/user', cliUserRouter);
+//
+app.use('/TGC', cliNodeNftRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
