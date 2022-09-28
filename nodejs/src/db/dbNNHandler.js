@@ -144,7 +144,7 @@ module.exports.getScTxsCntAll = async () => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 59");
     }
 
     return 0;
@@ -167,7 +167,7 @@ module.exports.getScTxsCntAllByTxn = async () => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 60");
     }
 
     return 0;
@@ -190,7 +190,7 @@ module.exports.getScTxsCntAllByTxnAndSubnetId = async (subnetId) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 61");
     }
 
     return 0;
@@ -215,7 +215,7 @@ module.exports.getScTxsCntAllByTxnAction = async (accountAction) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 62");
     }
 
     return 0;
@@ -241,7 +241,7 @@ module.exports.getScTxsCntPerDayByTokenAccountAction = async (accountAction, min
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 63");
     }
 
     return 0;
@@ -263,7 +263,7 @@ module.exports.getScTxsCntByMinMaxDbKey = async (minDbKey, maxDbKey) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 64");
     }
 
     return 0;
@@ -285,7 +285,7 @@ module.exports.getScTxsCntByCreateTmAndSubnetId = async (minTmMs, maxTmMs, subne
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 65");
     }
 
     return 0;
@@ -307,7 +307,7 @@ module.exports.getScTxsCntByAccountNum = async (AccountNum) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 66");
     }
 
     return 0;
@@ -329,7 +329,7 @@ module.exports.getScTxsCntByTxnAndActionAndAccountNum = async (tAccountAction, A
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 67");
     }
 
     return 0;
@@ -352,7 +352,7 @@ module.exports.getMaxDbKeyBySubnetId = async (subnetId) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 68");
     }
 
     return false;
@@ -373,7 +373,7 @@ module.exports.getScContentsByFromAccountNum = async (fromAccountNum) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error");
+        logger.error("Error - 69");
     }
 
     return false;
@@ -420,7 +420,7 @@ module.exports.getLatestScTxs = async (limitNum, subnetId) => {
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 70");
     }
 
     return 0;
@@ -456,7 +456,7 @@ module.exports.getLatestScTxsBySubnetIdAndTxnLimit = async (limitNum, subnetId) 
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 71");
     }
 
     return 0;
@@ -503,7 +503,7 @@ module.exports.getLatestScTxsByFromAccountNumLimit = async (limitNum, fromAccoun
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 72");
     }
 
     return 0;
@@ -550,7 +550,7 @@ module.exports.getLatestScTxsByToAccountNumLimit = async (limitNum, toAccountNum
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 73");
     }
 
     return 0;
@@ -597,7 +597,7 @@ module.exports.getLatestScTxsByFromAccountAndToAccountNumLimit = async (limitNum
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 74");
     }
 
     return 0;
@@ -711,7 +711,7 @@ module.exports.getLatestScTxsByAccountNumLimit = async (limitNum, accountNum) =>
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 75");
     }
 
     return 0;
@@ -746,7 +746,7 @@ module.exports.getLatestScTxsByTxnLimit = async (limitNum) => {
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 76");
     }
 
     return 0;
@@ -781,7 +781,7 @@ module.exports.getLatestScTxsByTxnActionLimit = async (limitNum, txnAction) => {
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 77");
     }
 
     return 0;
@@ -827,7 +827,7 @@ module.exports.getLatestScTxsByTxnActionAndAccountNumLimit = async (limitNum, tx
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 78");
     }
 
     return 0;
@@ -849,7 +849,7 @@ module.exports.getScTxsByDbKey = async (dbKey, scHash) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 79");
     }
 
     return false;
@@ -883,7 +883,7 @@ module.exports.getScTxsByMinMaxDbKey = async (minDbKey, maxDbKey) => {
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 80");
     }
 
     return false;
@@ -917,7 +917,7 @@ module.exports.getScTxsByMinMaxDbKeyLimit = async (minDbKey, maxDbKey, limitNum)
 
         return scTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 81");
     }
 
     return false;
@@ -925,6 +925,28 @@ module.exports.getScTxsByMinMaxDbKeyLimit = async (minDbKey, maxDbKey, limitNum)
 
 //////////////////////////////////////////////////////////////////////
 //
+module.exports.getDbKeyByCreateTm = async (create_tm) => {
+    try {
+        let sql = dbNN.querys.sc.sc_contents.selectDbKeyByCreateTime;
+
+        let query_result = await dbUtil.queryPre(sql, [create_tm]);
+        
+        if(query_result.length) 
+        {
+            return query_result[0].db_key;
+        }
+        else
+        {
+            return 0;
+        }
+    } catch (err) {
+        logger.error("Error - 82");
+    }
+
+    return false;
+}
+
+//////////////////////////////////////////////////////////////////////
 //
 module.exports.getBlkTxsDbKeyByScHash = async (scHash) => {
     logger.debug(scHash);
@@ -944,7 +966,7 @@ module.exports.getBlkTxsDbKeyByScHash = async (scHash) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 83");
     }
 
     return false;
@@ -971,7 +993,7 @@ module.exports.getBlkTxsMinMaxInfoByBlkNum = async (blkNum) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 84");
     }
 
     return false;
@@ -994,7 +1016,7 @@ module.exports.getBlkCnt = async () => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 85");
     }
 
     return false;
@@ -1017,7 +1039,7 @@ module.exports.getBlkCntByCreateTm = async (minTmMs, maxTmMs) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 86");
     }
 
     return false;
@@ -1035,7 +1057,7 @@ module.exports.getBlkInfoByBlkNum = async (blkNum) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 87");
     }
 
     return false;
@@ -1053,7 +1075,7 @@ module.exports.getBlkInfoByBlkHash = async (blkHash) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 88");
     }
 
     return false;
@@ -1075,7 +1097,7 @@ module.exports.getTxCntByBlkNum = async (sttBN, endBN) => {
 
         return blkTxsArray;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 89");
     }
 
     return false;
@@ -1090,7 +1112,7 @@ module.exports.getRangeBlksByBlkNum = async (sttBN, endBN) => {
 
         return query_result;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 90");
     }
 
     return false;
@@ -1105,7 +1127,7 @@ module.exports.getLatestBlks = async (limitNum) => {
 
         return query_result;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 91");
     }
 
     return false;
@@ -1127,7 +1149,7 @@ module.exports.getTokenInfoByTokenAccountAction = async (accountAction) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 92");
     }
 
     return false;
@@ -1148,7 +1170,7 @@ module.exports.getTokenInfoByTokenAccountName = async (accountName) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 93");
     }
 
     return false;
@@ -1169,7 +1191,7 @@ module.exports.getTokenInfoByTokenAccountSymbol = async (accountSymbol) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 94");
     }
 
     return false;
@@ -1189,7 +1211,7 @@ module.exports.getTokenInfoByAlphabeticName = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 95");
     }
 
     return false;
@@ -1209,7 +1231,7 @@ module.exports.getTokenInfoByIdx = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 96");
     }
 
     return false;
@@ -1229,7 +1251,7 @@ module.exports.getTokenInfoWithTxsCnt = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 97");
     }
 
     return false;
@@ -1273,7 +1295,7 @@ module.exports.getTradeVolumePerDayByTokenAccountAction = async (accountAction, 
             return {action : tokenInfo.action, name : tokenInfo.name, symbol : tokenInfo.symbol, tradePerDay : tokenTradeVol};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 98");
     }
 
     return false;
@@ -1289,7 +1311,7 @@ module.exports.getLedgersByActionAndAccountNum = async (action, accountNum) => {
         
         return query_result;
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 99");
     }
 
     return false;
@@ -1311,7 +1333,7 @@ module.exports.getSubNetIdByUserAccountPubkey = async (pubkey) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 100");
     }
 
     return false;
@@ -1331,7 +1353,7 @@ module.exports.getSubNetIdByUserAccountNum = async (accountNum) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 101");
     }
 
     return false;
@@ -1351,7 +1373,7 @@ module.exports.getSubNetIdByUserAccountId = async (accountId) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 102");
     }
 
     return false;
@@ -1373,7 +1395,7 @@ module.exports.getSubNetIdByTokenAccountPubkey = async (pubkey) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 103");
     }
 
     return false;
@@ -1393,7 +1415,7 @@ module.exports.getSubNetIdByTokenAccountNum = async (accountNum) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 104");
     }
 
     return false;
@@ -1413,7 +1435,7 @@ module.exports.getSubNetIdByTokenAccountAction = async (accountAction) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 105");
     }
 
     return false;
@@ -1433,7 +1455,7 @@ module.exports.getSubNetIdByTokenAccountName = async (accountName) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 106");
     }
 
     return false;
@@ -1453,7 +1475,7 @@ module.exports.getSubNetIdByTokenAccountSymbol = async (accountSymbol) => {
             return query_result[0].subnet_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 107");
     }
 
     return false;
@@ -1473,7 +1495,7 @@ module.exports.getUserAccountsByIdx = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 108");
     }
 
     return false;
@@ -1494,7 +1516,7 @@ module.exports.getUserAccountByAccountId = async (accountId) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 109");
     }
 
     return false;
@@ -1515,7 +1537,7 @@ module.exports.getUserAccountByPubkey = async (pubkey) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 110");
     }
 
     return false;
@@ -1536,7 +1558,7 @@ module.exports.getTokenAccountByPubkey = async (pubkey) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 111");
     }
 
     return false;
@@ -1557,7 +1579,7 @@ module.exports.getUserAccountByAccountNum = async (accountNum) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 112");
     }
 
     return false;
@@ -1579,7 +1601,7 @@ module.exports.getTokenAccountByAccountNum = async (accountNum) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 113");
     }
 
     return false;
@@ -1642,7 +1664,7 @@ module.exports.getAccountBalanceCntAllByTokenAccountAction = async (accountActio
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 114");
     }
 
     return false;
@@ -1662,7 +1684,7 @@ module.exports.getAccountBalanceByActionAndLimit = async (accountAction, limit) 
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 115");
     }
 
     return false;
@@ -1856,7 +1878,7 @@ module.exports.getAccountScCntByScAction = async (scAction) => {
             return 0;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 116");
     }
 
     return 0;
@@ -1877,7 +1899,7 @@ module.exports.getAccountScInfoByScAction = async (scAction) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 117");
     }
 
     return false;
@@ -1898,7 +1920,7 @@ module.exports.getAccountScInfoByScActionAndActionTarget = async (scAction) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 118");
     }
 
     return false;
@@ -1919,10 +1941,22 @@ module.exports.getAccountLedgersUsersByActionAndLimit = async (accountAction, li
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 119");
     }
 
     return false;
+}
+
+// Contract Checker
+module.exports.accountLegerCheck = async (account_num, action) => {
+    const conn = await dbUtil.getConn();
+
+    // logger.debug("accountLegerCheck - account_num : " + account_num + ", action : " + action);
+    [query_result] = await dbUtil.exeQueryParam(conn, dbNN.querys.account.account_ledgers.selectAccountLegers, [action, account_num]);
+
+    await dbUtil.releaseConn(conn);
+
+    return query_result;
 }
 
 // NFT
@@ -1962,7 +1996,7 @@ module.exports.getNftList = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 120");
     }
 
     return false;
@@ -1980,7 +2014,7 @@ module.exports.orderNftList = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 121");
     }
 
     return false;
@@ -2013,7 +2047,7 @@ module.exports.getActionTargetList = async (action_target) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 122");
     }
 
     return false;
@@ -2046,7 +2080,7 @@ module.exports.getActionTargetInfo = async (action_target) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 123");
     }
 
     return false;
@@ -2064,7 +2098,7 @@ module.exports.getSCActionTXList = async (scAction) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 124");
     }
 
     return false;
@@ -2100,7 +2134,7 @@ module.exports.getScDetailnfo = async (scAction) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 125");
     }
 
     return false;
@@ -2118,7 +2152,7 @@ module.exports.getScHoldersInfo = async (scAction) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 126");
     }
 
     return false;
@@ -2142,7 +2176,7 @@ module.exports.getUserNftTxInfo = async (accountNum) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 127");
     }
 
     return false;
@@ -2160,7 +2194,7 @@ module.exports.getSubIdTx = async (scAction, subId) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 128");
     }
 
     return false;
@@ -2186,7 +2220,7 @@ module.exports.getSubIdDetail = async (scAction, subId) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 129");
     }
 
     return false;
@@ -2204,7 +2238,7 @@ module.exports.getSubIdSc= async (scAction) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 130");
     }
 
     return false;
@@ -2221,7 +2255,7 @@ module.exports.getSubIdTxCnt = async (scAction, subId) => {
             return query_result[0].total_tx;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 131");
     }
 
     return false;
@@ -2239,7 +2273,7 @@ module.exports.getSumofAmount = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 132");
     }
 
     return false;
@@ -2256,7 +2290,7 @@ module.exports.getSumofAmountScAction = async (scAction) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 133");
     }
 
     return false;
@@ -2271,10 +2305,10 @@ module.exports.getMintSubId = async (scAction) => {
 
         if(query_result.length) 
         {
-            return query_result[0].sub_id + 1;
+            return query_result[0].sub_id;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - dbnn");
     }
 
     return false;
@@ -2293,25 +2327,29 @@ module.exports.getWalletInfo = async (wName) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 134");
     }
 
     return false;
 }
 
-module.exports.getPNumInfo = async (wName) => {
+module.exports.getPNumInfo = async (pNum) => {
     try {
         //
         let sql = dbNN.querys.account.account_sc.selectPNumByAccount;
-        
-        let query_result = await dbUtil.queryPre(sql, [wName]);
+        const SC_MAX = define.NODE_LIST.ZEUS.sc_action;
+        const SC_MIN = define.NODE_LIST.CHARITES.sc_action;
+        logger.error('SC_MIN : ' + SC_MIN);
+        logger.error('SC_MAX : ' + SC_MAX);
+        logger.error('pNum : ' + pNum);
+        let query_result = await dbUtil.queryPre(sql, [SC_MIN, SC_MAX, pNum]);
 
-        if(query_result.length) 
+        if(query_result.length && query_result[0].pNum) 
         {
-            return query_result;
+            return true;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 135");
     }
 
     return false;
@@ -2346,7 +2384,7 @@ module.exports.getUserNftInfo = async (accountNum) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 136");
     }
 
     return false;
@@ -2376,7 +2414,7 @@ module.exports.getNftListbyPnum = async (wName, pNum) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 137");
     }
 
     return false;
@@ -2406,7 +2444,7 @@ module.exports.getNftListbyCreateTm = async (wName, createTm) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 138");
     }
 
     return false;
@@ -2424,7 +2462,7 @@ module.exports.getNftMetaData = async (scAction, subId, toAccNum) => {
             return query_result[0];
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 139");
     }
 
     return false;

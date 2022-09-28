@@ -105,15 +105,42 @@ module.exports.inspectContract = async (reqQuery) => {
                 }
             }
 
-            //
-            let msg = contractJson;
+            // check the existence of create time
+            let dbKey = await dbNNHandler.getDbKeyByCreateTm(contractJson.create_tm);
+            if (dbKey) {
+                logger.error("inspectContract - Duplicated dbKey Error");
+                ret_msg = { errorCode: define.ERR_MSG.ERR_EXIST_DATA.CODE, contents: { res: false, msg: define.ERR_MSG.ERR_EXIST_DATA.MSG } };
+                break;
+            }
+            
+            // check contract create time
+            if (Number(contractJson.create_tm) <= util.getDateMS())
+            {
+                if (Number(contractJson.create_tm) < (util.getDateMS() - define.FIXED_VAL.TEN_MIN_MS)) // Valid until preivious several minutes.
+                {
+                    logger.error("inspectContract - create_tm Error");
+                    ret_msg = { errorCode: define.ERR_MSG.ERR_CREATE_TM.CODE, contents: { res: false, msg: define.ERR_MSG.ERR_CREATE_TM.MSG } };
+                    break;
+                }
+            }
 
             //
+            let msg = contractJson;
+            
+            //////////////////////////////////////////////////////////////////
+            //
+            // get data from fb.repl_info
+            let query_result = await dbFBHandler.getReplData();
+            let fbSubNetIdHex = query_result[0].subnet_id;
+            let fbSubNetId = parseInt(fbSubNetIdHex, 16);
+            logger.info("query_result : " + fbSubNetId);
+            
             //////////////////////////////////////////////////////////////////
             // KAFKA
             // Get Kafka Info
-            apiPath = `/kafka/broker/list?all`;
-            logger.debug("KAFKA apiPath : " + apiPath);
+            // apiPath = `/kafka/broker/list?all`;
+            apiPath = `/kafka/broker/list?subNetId=${fbSubNetId}`;
+            //
             apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
             logger.debug("KAFKA apiRes : " + JSON.stringify(apiRes));
 
@@ -135,7 +162,7 @@ module.exports.inspectContract = async (reqQuery) => {
             kafkaHandler.setMySubNetId(subNetId);
 
             // Send To Kafka
-            // let sentMsg = await kafkaHandler.sendContractMsg(msg);
+            let sentMsg = await kafkaHandler.sendContractMsg(msg);
 
             if (sentMsg === true)
             {
@@ -143,7 +170,7 @@ module.exports.inspectContract = async (reqQuery) => {
             }
         } while (0);
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - inspectContract");
     }
 
     return (ret_msg);
@@ -244,7 +271,7 @@ module.exports.contractExe = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_JSON_UNKNOWN_FORMAT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_JSON_UNKNOWN_FORMAT.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - contractExe");
     }
 
     return (ret_msg);
@@ -416,7 +443,7 @@ module.exports.addUserProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - addUserProc");
         ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
     }
 
@@ -641,7 +668,7 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - changeUserPubkeyProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -895,7 +922,7 @@ module.exports.createTokenProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - createTokenProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -1117,7 +1144,7 @@ module.exports.changeTokenPubkeyProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - changeTokenPubkeyProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -1277,7 +1304,7 @@ module.exports.changeTokenLockTxProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - changeTokenLockTxProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -1458,7 +1485,7 @@ module.exports.changeTokenLockTimeProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - changeTokenLockTimeProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -1615,7 +1642,7 @@ module.exports.changeTokenLockWalletProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - changeTokenLockWalletProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -1648,9 +1675,9 @@ module.exports.txTokenProc = async (reqQuery) => {
 
             do
             {
-                //
-                let apiPath;
-                let apiRes;
+                // //
+                // let apiPath;
+                // let apiRes;
 
                 //
                 let decimal_point;
@@ -1664,7 +1691,7 @@ module.exports.txTokenProc = async (reqQuery) => {
                 if (tAccountInfo === false)
                 {
                     // Error Code
-                    logger.debug("Error - Check Account Action");
+                    logger.error("Error - Check Account Action");
                     ret_msg =  { errorCode : define.ERR_MSG.ERR_TOKEN.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_TOKEN.MSG}};
                     break;
                 }
@@ -1689,7 +1716,7 @@ module.exports.txTokenProc = async (reqQuery) => {
                 if ((splitNum.length !== 2) || splitNum[1].length !== decimal_point)
                 {
                     // Error Code
-                    logger.debug("Error - Check Decimal Point");
+                    logger.error("Error - Check Decimal Point");
                     ret_msg =  { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
                     break;
                 }
@@ -1726,7 +1753,7 @@ module.exports.txTokenProc = async (reqQuery) => {
                         // if (Number(request.tAccountAction) === define.CONTRACT_DEFINE.ACTIONS.TOKEN.SECURITY_TOKEN)
                         // {
                         //     // Error Code
-                        //     logger.debug("Error -  Check Utility Token");
+                        //     logger.error("Error -  Check Utility Token");
                         //     break;
                         // }
 
@@ -1878,7 +1905,7 @@ module.exports.txTokenProc = async (reqQuery) => {
                         else
                         {
                             // Error Code
-                            logger.debug("Error -  request.amount");
+                            logger.error("Error -  request.amount");
                             ret_msg =  { errorCode : define.ERR_MSG.ERR_TOKEN_BALANCE.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_TOKEN_BALANCE.MSG}};
                             break;
                         }
@@ -1907,7 +1934,7 @@ module.exports.txTokenProc = async (reqQuery) => {
                 if (fromAccountHexStr === toAccountHexStr)
                 {
                     // Error Code
-                    logger.debug("Error -  Check fromAccount & toAccount");
+                    logger.error("Error -  Check fromAccount & toAccount");
                     ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
                     break;
                 }
@@ -1975,7 +2002,7 @@ module.exports.txTokenProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - txTokenProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -2142,7 +2169,7 @@ module.exports.createScProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - createScProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -2180,13 +2207,13 @@ module.exports.txScProc = async (reqQuery) => {
                 //
                 let apiPath;
                 let apiRes;
-                let sc;
+                let sc, toAccountId;
                 //
                 if (request.sc) {
                     if(!util.isJsonString(request.sc))
                     {
                         // Error Code
-                        logger.debug("Error -  Invalid sc json value");
+                        logger.error("Error -  Invalid sc json value");
                         break;
                     }
                     sc = request.sc;
@@ -2198,7 +2225,7 @@ module.exports.txScProc = async (reqQuery) => {
                     (Number(request.scAction) > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.END))
                 {
                     // Error Code
-                    logger.debug("Error -  Invalid SC Action Range");
+                    logger.error("Error -  Invalid SC Action Range");
                     ret_msg =  { errorCode : define.ERR_MSG.ERR_SC_ACTION_RANGE.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SC_ACTION_RANGE.MSG}};
                     break;
                 }
@@ -2247,7 +2274,7 @@ module.exports.txScProc = async (reqQuery) => {
                 if (apiRes.errorCode) // NOT Existed
                 {
                     // Error Code
-                    logger.debug("Error -  Check SC Action");
+                    logger.error("Error -  Check SC Action");
                     ret_msg =  { errorCode : define.ERR_MSG.ERR_SC_ACTION.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SC_ACTION.MSG}};
                     break;
                 }
@@ -2371,7 +2398,7 @@ module.exports.txScProc = async (reqQuery) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - txScProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -2400,7 +2427,7 @@ module.exports.mintScProc = async (reqBody) => {
                 let apiRes;
                 let recentPer;
                 let toAccount;
-                let scAction;
+                let scAction, subId;
 
                 // Check toAccount
                 let userInfo = await dbNNHandler.getUserAccountByAccountId(request.toAccount);
@@ -2412,116 +2439,168 @@ module.exports.mintScProc = async (reqBody) => {
                     break;
                 }
 
-                // Check LEFT amount of NODE
-                let nodeList = define.NODE_LIST;
+                let postData;
+
                 // 1. specific scAction - mapping with node name 
                 // if (request.hasOwnProperty("scAction")) {
                 if (request.hasOwnProperty("nodeName")) {
 
                     let nodeName = (request.nodeName).toUpperCase();
                     
-                    let node_sc = nodeList[`${nodeName}`].sc_action;
-                    
-                    // recentPer = await dbNNHandler.getSumofRatioScAction(request.scAction);
-                    recentPer = await dbNNHandler.getSumofAmountScAction(node_sc);
-                    scAction = recentPer.sc_action;
-                    if (recentPer.sum_amount < nodeList.TOTAL_PRICE) {
-                        if (nodeList.TOTAL_PRICE < Number(request.amount) + recentPer.sum_amount) {
-                            //ERROR CODE
-                            ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
-                            break;
-                        }
-                    } else {
-                        //ERROR CODE
-                        logger.error("unavailable to buy: " + request.scAction);
-                        ret_msg = { errorCode : define.ERR_MSG.ERR_SOLD_OUT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SOLD_OUT.MSG}};
-                        break;
-                    }
+                    postData = { amount: request.amount, toAccount: toAccount, pNum: request.pNum, nodeName: nodeName, seller: request.seller, pSiteId: request.pSiteId, wName: request.toAccount };
+
                 } else {
                     // 2. any scAction
-                    recentPer = await dbNNHandler.getSumofAmount();
-                    for (let i = 0; i < recentPer.length; i++){
-                        // if (recentPer[i].sum_amount < nodeList.TOTAL_PRICE) {
-                            if (nodeList.TOTAL_PRICE >= Number(request.amount) + recentPer[i].sum_amount) {
-                                scAction = recentPer[i].sc_action;
-                                break;
-                            }
-                        // } else {
-                        //     //ERROR CODE
-                        //     ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
-                        //     break;
-                        // }
-                    }
+                    postData = { amount: request.amount, toAccount: toAccount, pNum: request.pNum, seller: request.seller, pSiteId: request.pSiteId, wName: request.toAccount };
                 }
-
-                logger.debug("scAction: " + scAction);
-                logger.debug("toAccount: " + toAccount);
                 
+                process.send({ cmd: define.CMD_DEFINE.MINT_SC, data: JSON.stringify(postData) });
 
-                if (scAction && toAccount) {
-                    let subId = await dbNNHandler.getMintSubId(scAction);
-                    logger.debug("subId: " + subId);
-
-                    let ratioCal = (request.amount / define.NODE_LIST.TOTAL_PRICE * 100).toFixed(2);
-                    
-                    if (subId) {
-                        let sc = {
-                            sub_id: subId,
-                            owner: request.toAccount,
-                            meta_data: {
-                                ratio: ratioCal,
-                                amount: request.amount,
-                                pNum: request.pNum
-                            }
-                        }
-
-                        if (request.hasOwnProperty("seller")) {
-                            sc.meta_data.seller = request.seller;
-                        }
-
-                        if (request.hasOwnProperty("pSiteId")) {
-                            sc.meta_data.pSiteId = request.pSiteId;
-                        }
-
-                        let apiRoutePath = '/contract/sc/tx';
-                        let dir = nodeList.KEY_DIR;
-                        // let tkeyStoreJson = fs.readFile(dir, "binary", (err, data) => {
-                        //     if(err) {
-                        //         console.log(err);
-                        //     }
-                        //     console.log(data);
-                        // });
-
-                        let tkeyStoreJson = await fs.readFileSync(dir, 'binary');
-                        let tkeyStore = JSON.parse(tkeyStoreJson);
-                        let tokenPrikey = 'userPrikey';
-                        let tokenPrikeyVal = tkeyStore.edPrikeyFin;
-                        let tokenPrikeyPw = 'userPrikeyPw';
-                        let tokenPrikeyPwVal = process.env.UTIL_TKN_PW;
-                        let tokenPubkey = 'userPubkey';
-                        let tokenPubkeyVal = define.CONTRACT_DEFINE.ED_PUB_IDX + await cryptoUtil.getPubkeyNoFile(tkeyStore.edPubkeyPem);
-                        let tokenPrikeyEnc = encodeURIComponent(tokenPrikeyVal);
-                        let tokenPrikeyPwEnc = encodeURIComponent(tokenPrikeyPwVal);
-                        let tokenPubkeyEnc = encodeURIComponent(tokenPubkeyVal);
-                        let scActionKey = 'scAction', scKey = 'sc', fAccountKey = 'fromAccount', tAccountKey = 'toAccount', subIdKey = 'subId';
-
-                        let postData = `${scActionKey}=${scAction}&${scKey}=${JSON.stringify(sc)}&${tokenPrikey}=${tokenPrikeyEnc}&${tokenPrikeyPw}=${tokenPrikeyPwEnc}&${tokenPubkey}=${tokenPubkeyEnc}&${fAccountKey}=0&${tAccountKey}=${toAccount}&${subIdKey}=${subId}`;
-                        logger.debug("postData: " + postData);
-                        
-                        apiRes = await webApi.APICallProc(apiRoutePath, config.NFT_CONFIG, webApi.WEBAPI_DEFINE.METHOD.POST, postData);
-                        
-                        logger.debug("apiRes: " + JSON.stringify(apiRes));
-                        ret_msg = apiRes;
-                    }
-                } else {
-                    break;
-                }
+                ret_msg = { errorCode : define.ERR_MSG.SUCCESS.CODE, contents : { res : false, msg : define.ERR_MSG.SUCCESS.MSG}};
+                
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - mintScProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
     return (ret_msg);
+}
+
+//
+module.exports.mintScPostProc = async (req) => {
+    let request = req;
+    do {
+        //
+        let apiPath;
+        let apiRes;
+        let recentPer;
+        let toAccount = request.toAccount;
+        let scAction, subId;
+
+        // Check LEFT amount of NODE
+        let nodeList = define.NODE_LIST;
+        // 1. specific scAction - mapping with node name 
+        // if (request.hasOwnProperty("scAction")) {
+        if (request.hasOwnProperty("nodeName")) {
+
+            let nodeName = (request.nodeName).toUpperCase();
+            
+            let node_sc = nodeList[`${nodeName}`].sc_action;
+            
+            // recentPer = await dbNNHandler.getSumofRatioScAction(request.scAction);
+            recentPer = await dbNNHandler.getSumofAmountScAction(node_sc);
+            scAction = recentPer.sc_action;
+            if (recentPer.sum_amount < nodeList.TOTAL_PRICE) {
+                if (nodeList.TOTAL_PRICE < Number(request.amount) + recentPer.sum_amount) {
+                    //ERROR CODE
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
+                    break;
+                }
+            } else {
+                //ERROR CODE
+                logger.error("unavailable to buy: " + request.scAction);
+                ret_msg = { errorCode : define.ERR_MSG.ERR_SOLD_OUT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SOLD_OUT.MSG}};
+                break;
+            }
+        } else {
+            // 2. any scAction
+            recentPer = await dbNNHandler.getSumofAmount();
+            for (let i = 0; i < recentPer.length; i++){
+                // if (recentPer[i].sum_amount < nodeList.TOTAL_PRICE) {
+                    logger.info('sum_amount[' + i + '] :' + recentPer[i].sum_amount);
+                    if (nodeList.TOTAL_PRICE >= Number(request.amount) + recentPer[i].sum_amount) {
+                        scAction = recentPer[i].sc_action;
+                        break;
+                    }
+                // } else {
+                //     //ERROR CODE
+                //     ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
+                //     break;
+                // }
+            }
+        }
+
+        logger.debug("scAction: " + scAction);
+        logger.debug("toAccount: " + toAccount);
+        
+
+        if (scAction && toAccount) {
+            subId = await dbNNHandler.getMintSubId(scAction);
+            logger.debug("subId 1 : " + subId);
+    
+            let subIdHexStr = util.paddy(parseInt(subId).toString(16), 4);
+            logger.debug("subIdHexStr 1 : " + subIdHexStr);
+    
+            // Next subId
+            subId = util.hexStrToInt(subIdHexStr) + 1;
+            subIdHexStr = util.paddy(parseInt(subId).toString(16), 4);
+            logger.debug("subIdHexStr 1 : " + subIdHexStr);
+    
+            //
+            let randomHexStr = util.paddy(util.getRandomNumBuf(2, 1, 255).toString('hex'), 4);
+            logger.debug('randomHexStr : ' + randomHexStr);
+    
+            subIdHexStr = randomHexStr + subIdHexStr;
+            logger.debug("subIdHexStr 2 : " + subIdHexStr);
+    
+            // Output value
+            subId = util.hexStrToInt(subIdHexStr);
+            logger.debug("subId 2 : " + subId);
+
+            let ratioCal = (request.amount / define.NODE_LIST.TOTAL_PRICE * 100).toFixed(2);
+            
+            if (subId) {
+                let sc = {
+                    sub_id: subId,
+                    owner: request.wName,
+                    meta_data: {
+                        ratio: ratioCal,
+                        amount: request.amount,
+                        pNum: request.pNum
+                    }
+                }
+
+                if (request.hasOwnProperty("seller")) {
+                    sc.meta_data.seller = request.seller;
+                }
+
+                if (request.hasOwnProperty("pSiteId")) {
+                    sc.meta_data.pSiteId = request.pSiteId;
+                }
+
+                let apiRoutePath = '/contract/sc/tx';
+                let dir = nodeList.KEY_DIR;
+                // let tkeyStoreJson = fs.readFile(dir, "binary", (err, data) => {
+                //     if(err) {
+                //         console.log(err);
+                //     }
+                //     console.log(data);
+                // });
+
+                let tkeyStoreJson = await fs.readFileSync(dir, 'binary');
+                let tkeyStore = JSON.parse(tkeyStoreJson);
+                let tokenPrikey = 'userPrikey';
+                let tokenPrikeyVal = tkeyStore.edPrikeyFin;
+                let tokenPrikeyPw = 'userPrikeyPw';
+                let tokenPrikeyPwVal = process.env.UTIL_TKN_PW;
+                let tokenPubkey = 'userPubkey';
+                let tokenPubkeyVal = define.CONTRACT_DEFINE.ED_PUB_IDX + await cryptoUtil.getPubkeyNoFile(tkeyStore.edPubkeyPem);
+                let tokenPrikeyEnc = encodeURIComponent(tokenPrikeyVal);
+                let tokenPrikeyPwEnc = encodeURIComponent(tokenPrikeyPwVal);
+                let tokenPubkeyEnc = encodeURIComponent(tokenPubkeyVal);
+                let scActionKey = 'scAction', scKey = 'sc', fAccountKey = 'fromAccount', tAccountKey = 'toAccount', subIdKey = 'subId';
+
+                let postData = `${scActionKey}=${scAction}&${scKey}=${JSON.stringify(sc)}&${tokenPrikey}=${tokenPrikeyEnc}&${tokenPrikeyPw}=${tokenPrikeyPwEnc}&${tokenPubkey}=${tokenPubkeyEnc}&${fAccountKey}=0&${tAccountKey}=${toAccount}&${subIdKey}=${subId}`;
+
+                apiRes = await webApi.APICallProc(apiRoutePath, config.NFT_CONFIG, webApi.WEBAPI_DEFINE.METHOD.POST, postData);
+                
+                logger.debug("apiRes: " + JSON.stringify(apiRes));
+                // ret_msg = apiRes;
+            }
+        } else {
+            break;
+        }
+    } while (0);
 }

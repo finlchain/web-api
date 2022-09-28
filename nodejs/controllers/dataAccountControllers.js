@@ -582,7 +582,7 @@ module.exports.getAccountList = async (req, res) => {
         {
             logger.debug("NFT scAccountInfo : " + nftInfo);
 
-            let orderList = await dbNNHandler.orderNftList();
+            // let orderList = await dbNNHandler.orderNftList();
             
             ret_msg = {
                 errorCode : define.ERR_MSG.SUCCESS.CODE,
@@ -665,7 +665,7 @@ module.exports.getAccountHistory = async (req, res) => {
             }
         } while (0);
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 44");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -1197,7 +1197,7 @@ module.exports.chkAccountInfo = async (req, res) => {
             }
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 45");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -1230,7 +1230,7 @@ module.exports.chkAccountCnt = async (req, res) => {
             }
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 46");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -1540,7 +1540,7 @@ module.exports.chkNftInfo = async (req, res) => {
         } while (0);
         
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 47");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));

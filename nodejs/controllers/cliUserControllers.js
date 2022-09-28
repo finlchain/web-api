@@ -32,7 +32,7 @@ module.exports.chkWalletInfo = async (req, res) => {
     try {
         ret_msg = await cliContractProc.chkWalletInfoProc(reqBody);
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 36");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));

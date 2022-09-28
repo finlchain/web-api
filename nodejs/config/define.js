@@ -23,32 +23,36 @@ module.exports.ERR_MSG ={
         MSG : "Invalid Data"
     }, 
     ERR_EXIST_DATA : {
-        CODE : 3001, 
+        CODE : 3002, 
         MSG : "Existed Data"
     }, 
     ERR_CONTRACT : {
-        CODE : 3002, 
+        CODE : 3003, 
         MSG : "Invalid Contract"
     }, 
     ERR_PUBKEY : {
-        CODE : 3003, 
+        CODE : 3004, 
         MSG : "Invalid Pubkey"
     }, 
     ERR_PUBKEY_LEN : {
-        CODE : 3004, 
+        CODE : 3005, 
         MSG : "Invalid Pubkey Length"
     }, 
     ERR_PUBKEY_DELI : {
-        CODE : 3005, 
+        CODE : 3006, 
         MSG : "Invalid Pubkey Delimiter"
     }, 
     ERR_VERIFY_SIG : {
-        CODE : 3006, 
+        CODE : 3007, 
         MSG : "Failed Signature Verification"
     },
     ERR_EXIST_PUBKEY : {
-        CODE : 3007, 
+        CODE : 3008, 
         MSG : "Existed Pubkey"
+    },
+    ERR_CREATE_TM : {
+        CODE : 3009, 
+        MSG : "Invalid Create Tm"
     },
     //
     //
@@ -520,6 +524,11 @@ module.exports.START_MSG = "=================================================="
 module.exports.CMD = {
     ENCODING:       'utf8', 
     TEST_NODE_NFT:  'test node nft', 
+}
+
+module.exports.CMD_DEFINE = {
+    MINT_SC : "mintingSc",
+    NULL_MINT_SC_IND : "nullMintScInd",
 }
 
 //

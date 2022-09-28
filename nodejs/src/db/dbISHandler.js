@@ -16,7 +16,7 @@ module.exports.getClusterInfoAll = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 48");
     }
 
     return false;
@@ -35,7 +35,7 @@ module.exports.getClusterAddrByRole = async (role) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 49");
     }
 
     return false;
@@ -54,7 +54,7 @@ module.exports.getHubInfo = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 50");
     }
 
     return false;
@@ -73,7 +73,7 @@ module.exports.getKafkaInfoAll = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 51");
     }
 
     return false;
@@ -91,7 +91,7 @@ module.exports.getKafkaInfoByLikeTopic = async (likeTopic) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 52");
     }
 
     return false;
@@ -109,7 +109,7 @@ module.exports.getTokenInfoByAction = async (tokenAction) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 53");
     }
 
     return false;    
@@ -127,7 +127,7 @@ module.exports.getTokenInfoByName = async (tokenName) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 54");
     }
 
     return false;    
@@ -145,7 +145,7 @@ module.exports.getTokenInfoBySymbol = async (tokenSymbol) => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 55");
     }
 
     return false;    
@@ -163,7 +163,7 @@ module.exports.getTokenInfoAll = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 56");
     }
 
     return false;    
@@ -182,7 +182,7 @@ module.exports.getSystemInfo = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 57");
     }
 
     return false;    
@@ -202,7 +202,7 @@ module.exports.getSystemInfoBgStatus = async () => {
             return query_result;
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 58");
     }
 
     return false;    

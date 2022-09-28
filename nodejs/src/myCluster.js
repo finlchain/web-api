@@ -9,11 +9,16 @@ const TxLock = new Sema(1, { capacity : 100} );
 const define = require("./../config/define.js");
 const config = require("./../config/config.js");
 
+const contractProc = require("./contract/contractProc.js");
+
 // const cryptoUtil = require("./sec/cryptoUtil.js");
 const cli = require("./cli/cli.js");
 const util = require("./utils/commonUtil.js");
 const timer = require("./utils/timer.js");
 const logger = require("./utils/winlog.js");
+
+//
+const cliContractProc = require("./../controllers/cliContractControllersProc.js");
 
 //
 module.exports.MAX_CLUSTER_WORKER_NUM = define.CLUSTER_DEFINE.DEF_CLUSTER_WORKER_NUM + define.CLUSTER_DEFINE.API_CLUSTER_WORKER_NUM;
@@ -39,6 +44,26 @@ module.exports.clusterInit = async () => {
         cluster.on("online", (worker) => {
             // Each Worker Online then something TODO Here
             // console.log("[M] workerid : " + worker.id + " is online");
+        });
+
+        cluster.on("message", async (worker, msg) => {
+
+            switch (msg.cmd)
+            {
+            case define.CMD_DEFINE.MINT_SC:
+                    // logger.info("=== [M] Master - delay END ===");
+                    // logger.info("received CMD " + msg.cmd);
+                    worker = cluster.workers[define.CLUSTER_DEFINE.NODE_NFT_CLUSTER_WORKER_ID];
+                    worker.send(msg);
+                break;
+            case define.CMD_DEFINE.NULL_MINT_SC_IND:
+                    worker = cluster.workers[define.CLUSTER_DEFINE.NODE_NFT_CLUSTER_WORKER_ID];
+                    worker.send(msg);
+                break;
+            default :
+                // Error
+                break;
+            }
         });
 
         cluster.on("exit", (worker, code, signal) => {
@@ -166,14 +191,34 @@ module.exports.clusterInit = async () => {
         //
         logger.info("[W] " + cluster.worker.id + "'s Worker start");
 
+        timer.setIntervalMintScArr();
+
         //
         process.on('message', async (msg) => {
             switch (msg.cmd)
             {
+            case define.CMD_DEFINE.MINT_SC:
+                logger.info("=== [W] NODE_NFT - MINT_SC");
+                if(msg['data'].length && util.isJsonString(msg['data']))
+                {
+                    let mintScJson = JSON.parse(msg['data']);
+                    logger.debug('msg : ' + msg['data']);
+                    // cliContractProc.mintScPostProc(mintScJson);
+
+                    contractProc.pushContractArray(mintScJson);
+                }
+                break;
+            case define.CMD_DEFINE.NULL_MINT_SC_IND:
+                contractProc.mintScTimerProc();
+                break;
             default :
                 // Error
                 break;
             }
         });
     } 
+}
+
+module.exports.sendNullMintScToMaster = async () => {
+    process.send({cmd : define.CMD_DEFINE.NULL_MINT_SC_IND, data : ""});
 }

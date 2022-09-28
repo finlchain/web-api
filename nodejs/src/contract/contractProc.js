@@ -8,7 +8,56 @@ const util = require('../utils/commonUtil.js');
 const logger = require('../utils/winlog.js');
 
 //
+const cliContractProc = require("./../../controllers/cliContractControllersProc.js");
+
+//
 const C_DEFINE = define.CONTRACT_DEFINE;
+
+////////////////////////////////////////////////////////
+//
+let contractArray = new Array();
+
+module.exports.contractArray = contractArray;
+
+module.exports.getContractArray = () => {
+    let tempArray = [...contractArray];
+    return tempArray;
+}
+
+module.exports.getContractArrayLen = () => {
+    return contractArray.length;
+}
+
+module.exports.setContractArray = async (array) => {
+    contractArray = await contractArray.concat(array);
+}
+
+module.exports.pushContractArray = (data) => {
+    // logger.debug("data.jsonData : " + data.jsonData);
+    contractArray.push(data);
+}
+
+module.exports.reinitContractArray = async () => {
+    contractArray = new Array();
+}
+
+//
+module.exports.mintScTimerProc = async () => {
+    if(util.isArray(contractArray) && contractArray.length)
+    {
+        let transferArray;
+        let transferCnt = 1;
+
+        transferArray = contractArray.slice(0, transferCnt);
+        contractArray = contractArray.slice(transferCnt, contractArray.length);
+
+        await util.asyncForEach(transferArray, async (element, index) => {
+            cliContractProc.mintScPostProc(element);
+        });
+        
+    }
+}
+////////////////////////////////////////////////////////
 
 // 
 module.exports.cAddUser = async (ownerPubKey, superPubKey, accountId, ownerPrikey, seed) => {

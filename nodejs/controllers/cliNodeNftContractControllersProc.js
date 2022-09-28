@@ -99,7 +99,7 @@ module.exports.chkClientInfo = async (apiKey, ts, version, signature, requester)
                 
             } while(0);
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - chkClientInfo");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -166,7 +166,7 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - chkWalletInfoProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -241,17 +241,19 @@ module.exports.txMintNodeProc = async (reqQuery) => {
                     }
 
                     // check purchase number
-                    let pNumList = await dbNNHandler.getPNumInfo(request.wName);
-                    logger.debug("pNumList " + JSON.stringify(pNumList));
-                    let pResult;
+                    // let pNumList = await dbNNHandler.getPNumInfo(request.pNum);
+                    // logger.debug("pNumList " + JSON.stringify(pNumList));
+                    // let pResult;
 
-                    for (let i = 0; i < pNumList.length; i++){
-                        if (pNumList[i].pNum === request.pNum) {
-                            pResult = true;
-                        } else {
-                            pResult = false;
-                        }
-                    }
+                    // for (let i = 0; i < pNumList.length; i++){
+                    //     if (pNumList[i].pNum === request.pNum) {
+                    //         pResult = true;
+                    //     } else {
+                    //         pResult = false;
+                    //     }
+                    // }
+
+                    let pResult = await dbNNHandler.getPNumInfo(request.pNum);
 
                     if (pResult) {
                         // Error Code
@@ -268,7 +270,7 @@ module.exports.txMintNodeProc = async (reqQuery) => {
                     logger.debug("apiRes", JSON.stringify(apiRes))
                     if (apiRes.errorCode) {
                         // Error Code
-                        logger.error("Error - ");
+                        logger.error("Error - " + define.ERR_MSG.ERR_RES.MSG);
                         ret_msg =  { errorCode : define.ERR_MSG.ERR_RES.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_RES.MSG}};
                         break;
                     }
@@ -290,7 +292,7 @@ module.exports.txMintNodeProc = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - txMintNodeProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -433,7 +435,7 @@ module.exports.chkUserNFTProc = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - chkUserNFTProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -547,7 +549,7 @@ module.exports.refundNftProc = async (reqBody) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - refundNftProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -698,7 +700,7 @@ module.exports.txNftProc = async (reqBody) => {
             } while(0);
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - txNftProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 

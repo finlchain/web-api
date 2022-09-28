@@ -38,7 +38,7 @@ module.exports.walletProc = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_JSON_UNKNOWN_FORMAT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_JSON_UNKNOWN_FORMAT.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 42");
     }
 
     return (ret_msg);
@@ -247,7 +247,7 @@ module.exports.keyGenProc = async (reqQuery) => {
             }
         } while (0);
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 43");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 

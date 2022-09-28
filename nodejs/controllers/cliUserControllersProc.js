@@ -112,7 +112,7 @@ module.exports.chkClientInfo = async (apiKey, ts, version, signature, requester)
                 
             } while(0);
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 37");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -179,7 +179,7 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
         }
     } catch (err) {
-        logger.error("Error - ");
+        logger.error("Error - 38");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
