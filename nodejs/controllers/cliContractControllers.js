@@ -84,7 +84,7 @@ module.exports.toolJson = async (req, res) => {
                 {
                     if (!util.isJsonString(reqBody.contentsEnc))
                     {
-                        logger.error("Error - contentsEnc");
+                        logger.error("Error - toolJson/contentsEnc");
                         ret_msg = { errorCode : define.ERR_MSG.ERR_JSON.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_JSON.MSG}};
                         break;
                     }
@@ -281,7 +281,7 @@ module.exports.toolJson = async (req, res) => {
             }
         } while(0);
     } catch (err) {
-        logger.error("Error - 1");
+        logger.error("Error - Contract - toolJson");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -300,7 +300,7 @@ module.exports.addUser = async (req, res) => {
     try {
         ret_msg = await cliContractProc.addUserProc(reqBody);
     } catch (err) {
-        logger.error("Error - 2");
+        logger.error("Error - addUser");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -319,7 +319,7 @@ module.exports.changeUserPubkey = async (req, res) => {
     try {
         ret_msg = await cliContractProc.changeUserPubkeyProc(reqBody);
     } catch (err) {
-        logger.error("Error - 3");
+        logger.error("Error - changeUserPubkey");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -338,7 +338,7 @@ module.exports.createToken = async (req, res) => {
     try {
         ret_msg = await cliContractProc.createTokenProc(reqBody);
     } catch (err) {
-        logger.error("Error - 4");
+        logger.error("Error - createToken");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -357,7 +357,7 @@ module.exports.changeTokenPubkey = async (req, res) => {
     try {
         ret_msg = await cliContractProc.changeTokenPubkeyProc(reqBody);
     } catch (err) {
-        logger.error("Error - 5");
+        logger.error("Error - changeTokenPubkey");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -376,7 +376,7 @@ module.exports.changeTokenLockTx = async (req, res) => {
     try {
         ret_msg = await cliContractProc.changeTokenLockTxProc(reqBody);
     } catch (err) {
-        logger.error("Error - 6");
+        logger.error("Error - changeTokenLockTx");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -395,7 +395,7 @@ module.exports.changeTokenLockTime = async (req, res) => {
     try {
         ret_msg = await cliContractProc.changeTokenLockTimeProc(reqBody);
     } catch (err) {
-        logger.error("Error - 7");
+        logger.error("Error - changeTokenLockTime");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -414,7 +414,7 @@ module.exports.changeTokenLockWallet = async (req, res) => {
     try {
         ret_msg = await cliContractProc.changeTokenLockWalletProc(reqBody);
     } catch (err) {
-        logger.error("Error - 8");
+        logger.error("Error - changeTokenLockWallet");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -433,7 +433,26 @@ module.exports.txToken = async (req, res) => {
     try {
         ret_msg = await cliContractProc.txTokenProc(reqBody);
     } catch (err) {
-        logger.error("Error - 9");
+        logger.error("Error - txToken");
+    }
+
+    logger.debug("ret_msg : " + JSON.stringify(ret_msg));
+
+    res.send(ret_msg);
+}
+
+//
+module.exports.multiTxToken = async (req, res) => {
+    const request = req.query;
+    const reqBody = req.body;
+    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
+
+    logger.debug("func : multiTxToken");
+
+    try {
+        ret_msg = await cliContractProc.multiTxTokenProc(reqBody);
+    } catch (err) {
+        logger.error("Error - multiTxToken");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -453,7 +472,7 @@ module.exports.createSc = async (req, res) => {
     try {
         ret_msg = await cliContractProc.createScProc(reqBody);
     } catch (err) {
-        logger.error("Error - 10");
+        logger.error("Error - createSc");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -472,7 +491,7 @@ module.exports.txSc = async (req, res) => {
     try {
         ret_msg = await cliContractProc.txScProc(reqBody);
     } catch (err) {
-        logger.error("Error - 11");
+        logger.error("Error - txSc");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -490,7 +509,7 @@ module.exports.mintSc = async (req, res) => {
     try {
         ret_msg = await cliContractProc.mintScProc(reqBody);
     } catch (err) {
-        logger.error("Error - 12");
+        logger.error("Error - mintSc");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));

@@ -217,7 +217,11 @@ module.exports.ERR_MSG ={
     ERR_NO_NFT_2 : {
         CODE : 10014, 
         MSG : "CANNOT find the result with "
-    }
+    },
+    ERR_NFT_TX : {
+        CODE : 10015, 
+        MSG : "Not the current owner of NFT"
+    },
 }
 
 
@@ -456,6 +460,12 @@ module.exports.CONTRACT_DEFINE = {
             DST_ACCOUNT : "dst_account", 
             AMOUNT : "amount"
         }, 
+        TOKEN_MULTI_TX : {
+            ACTION : "action",
+            TOKEN_ACCOUNT : "token_account", 
+            TOTAL_AMOUNT : "total_amount",
+            TX_INFO : "tx_info"
+        }, 
         LOCK_TOKEN_TX : {
             ACTION : "action",
             LOCK : "lock"
@@ -502,6 +512,9 @@ module.exports.CONTRACT_DEFINE = {
             SC_ACTION : "sc_action",
             ACTION_TARGET : "action_target",
             SC : "sc"
+        },
+        TRANSFER_SC: {
+            SC : "sc"
         }
     },
     LOCK_TOKEN_TX : {
@@ -524,6 +537,8 @@ module.exports.START_MSG = "=================================================="
 module.exports.CMD = {
     ENCODING:       'utf8', 
     TEST_NODE_NFT:  'test node nft', 
+    TEST_DUPL_ARR:   'test dupl arr',
+    TEST_SUBID:  'test subid',
 }
 
 module.exports.CMD_DEFINE = {
@@ -606,195 +621,241 @@ module.exports.NODE_LIST = {
     ZEUS: {
         node: 'IS',
         sc_action: 2684354606,
+        walletAcc: 'ZEUS'
     },
     //
     HERA: {
         node: 'NN01',
         sc_action: 2684354595,
+        walletAcc: 'HERA'
     },
     ATHENA: {
         node: 'NN02',
         sc_action: 2684354596,
+        walletAcc: 'ATHENA'
     },
     APHRODITE: {
         node: 'NN03',
         sc_action: 2684354597,
+        walletAcc: 'APHRODITE'
     },
     APOLLON: {
         node: 'NN04',
         sc_action: 2684354598,
+        walletAcc: 'APOLLON'
     },
     ARES: {
         node: 'NN05',
         sc_action: 2684354599,
+        walletAcc: 'ARES'
     },
     ARTEMIS: {
         node: 'NN06',
         sc_action: 2684354600,
+        walletAcc: 'ARTEMIS'
     },
     DEMETER: {
         node: 'NN07',
         sc_action: 2684354601,
+        walletAcc: 'DEMETER'
     },
     //
     DIONYSUS: {
         node: 'NN08',
         sc_action: 2684354602,
+        walletAcc: 'DEV_USER_1'
     },
     HEPHAESTUS: {
         node: 'NN09',
         sc_action: 2684354603,
+        walletAcc: 'HEPHAESTUS'
     },
     HERMES: {
         node: 'NN10',
         sc_action: 2684354604,
+        walletAcc: 'HERMES'
     },
     POSEIDON: {
         node: 'NN11',
         sc_action: 2684354605,
+        walletAcc: 'POSEIDON'
     },
     //
     HESTIA: {
         node: 'ISAG01',
         sc_action: 2684354581,
+        walletAcc: 'DEV_USER_1'
     },
     HERCULES: {
         node: 'ISAG02',
         sc_action: 2684354582,
+        walletAcc: 'HERCULES'
     },
     ASCLEPIUS: {
         node: 'ISAG03',
         sc_action: 2684354583,
+        walletAcc: 'ASCLEPIUS'
     },
     EROS: {
         node: 'ISAG04',
         sc_action: 2684354584,
+        walletAcc: 'EROS'
     },
     IRIS: {
         node: 'ISAG05',
         sc_action: 2684354585,
+        walletAcc: 'IRIS'
     },
     HEBE: {
         node: 'ISAG06',
         sc_action: 2684354586,
+        walletAcc: 'HEBE'
     },
     AILEITYIA: {
         node: 'ISAG07',
         sc_action: 2684354587,
+        walletAcc: 'AILEITYIA'
     },
     //
     PAN: {
         node: 'ISAG08',
         sc_action: 2684354588,
+        walletAcc: 'PAN'
     },
     HARMONIA: {
         node: 'ISAG09',
         sc_action: 2684354589,
+        walletAcc: 'HARMONIA'
     },
     GAIMEDES: {
         node: 'ISAG10',
         sc_action: 2684354590,
+        walletAcc: 'GAIMEDES'
     },
     PAIAN: {
         node: 'ISAG11',
         sc_action: 2684354591,
+        walletAcc: 'PAIAN'
     },
     ENIO: {
         node: 'ISAG12',
         sc_action: 2684354592,
+        walletAcc: 'ENIO'
     },
     PHOBOS: {
         node: 'ISAG13',
         sc_action: 2684354593,
+        walletAcc: 'PHOBOS'
     },
     DEIMOS: {
         node: 'ISAG14',
         sc_action: 2684354594,
+        walletAcc: 'DEIMOS'
     },
     //
     CHARITES: {
         node: 'FBN01',
         sc_action: 2684354560,
+        walletAcc: 'CHARITES'
     },
     CRONOS: {
         node: 'FBN02',
         sc_action: 2684354561,
+        walletAcc: 'CRONOS'
     },
     DIONE: {
         node: 'FBN03',
         sc_action: 2684354562,
+        walletAcc: 'DIONE'
     },
     EOS: {
         node: 'FBN04',
         sc_action: 2684354563,
+        walletAcc: 'EOS1'
     },
     GAIA: {
         node: 'FBN05',
         sc_action: 2684354564,
+        walletAcc: 'GAIA'
     },
     HADES: {
         node: 'FBN06',
         sc_action: 2684354565,
+        walletAcc: 'HADES'
     },
     HELIOS: {
         node: 'FBN07',
         sc_action: 2684354566,
+        walletAcc: 'HELIOS'
     },
     HECATE: {
         node: 'FBN08',
         sc_action: 2684354567,
+        walletAcc: 'HECATE'
     },
     HYPNOS: {
         node: 'FBN09',
         sc_action: 2684354568,
+        walletAcc: 'HYPNOS'
     },
     LATO: {
         node: 'FBN10',
         sc_action: 2684354569,
+        walletAcc: 'LATO'
     },
     METIS: {
         node: 'FBN11',
         sc_action: 2684354570,
+        walletAcc: 'METIS'
     },
     MOUSAI: {
         node: 'FBN12',
         sc_action: 2684354571,
+        walletAcc: 'MOUSAI'
     },
     NEMESIS: {
         node: 'FBN13',
         sc_action: 2684354572,
+        walletAcc: 'NEMESIS'
     },
     NIKE: {
         node: 'FBN14',
         sc_action: 2684354573,
+        walletAcc: 'NIKE'
     },
     PERSEPHONE: {
         node: 'FBN15',
         sc_action: 2684354574,
+        walletAcc: 'PERSEPHONE'
     },
     PSUKHE: {
         node: 'FBN16',
         sc_action: 2684354575,
+        walletAcc: 'PSUKHE'
     },
     RHEA: {
         node: 'FBN17',
         sc_action: 2684354576,
+        walletAcc: 'RHEA'
     },
     SELENE: {
         node: 'FBN18',
         sc_action: 2684354577,
+        walletAcc: 'SELENE'
     },
     THANATOS: {
         node: 'FBN19',
         sc_action: 2684354578,
-        walletAcc: 'DEV_USER_1'
+        walletAcc: 'THANATOS'
     },
     TYCHE: {
         node: 'FBN20',
         sc_action: 2684354579,
+        walletAcc: 'TYCHE'
     },
     URANOS: {
         node: 'FBN21',
         sc_action: 2684354580,
+        walletAcc: 'URANOS'
     }
 }

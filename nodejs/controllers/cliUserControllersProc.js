@@ -34,15 +34,10 @@ module.exports.chkClientInfo = async (apiKey, ts, version, signature, requester)
     let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
     try {
             logger.debug("apiKey : " + apiKey);
-            console.log("🚀 ~ module.exports.chkClientInfo= ~ apiKey", apiKey)
             logger.debug("timestamp : " + ts);
-            console.log("🚀 ~ module.exports.chkClientInfo= ~ ts", ts)
             logger.debug("version : " + version);
-            console.log("🚀 ~ module.exports.chkClientInfo= ~ version", version)
             logger.debug("signature : " + signature);
-            console.log("🚀 ~ module.exports.chkClientInfo= ~ signature", signature)
             logger.debug("requester : " + requester);
-            console.log("🚀 ~ module.exports.chkClientInfo= ~ requester", requester)
 
             do
             {
@@ -68,8 +63,7 @@ module.exports.chkClientInfo = async (apiKey, ts, version, signature, requester)
                 let xbPubkeyDir = './key/tgc_x_pubkey.pem'
                 let readXbPub = cryptoSsl.ed25519GetPubkey(xbPubkeyDir);
                 let xbPubkeyFile = await fs.readFileSync(xbPubkeyDir, 'binary');
-                console.log("🚀 ~ module.exports.chkWalletInfo ~ readXbPub", readXbPub)
-                console.log("🚀 ~ module.exports.chkWalletInfo ~ typeof readXbPub", typeof readXbPub)
+
                 
                 if (xbPubkey !== readXbPub) {
                     logger.error("Error -  Invalid API Key value");
@@ -81,25 +75,15 @@ module.exports.chkClientInfo = async (apiKey, ts, version, signature, requester)
                 // check signature
                 let xaPrikeyPath = './key/fc_x_privkey.pem';
                 let xaPrikeyFile = await fs.readFileSync(xaPrikeyPath, 'binary');
-                console.log("🚀 ~ module.exports.chkWalletInfoProc ~ xaPrikeyFile", xaPrikeyFile)
 
                 let sharedKey1 = cryptoApi.generateX25519MixSKey(xaPrikeyFile, xbPubkey);
-                console.log("🚀 ~ module.exports.chkWalletInfoProc ~ sharedKey1", sharedKey1)
-                // let sharedKey2 = cryptoApi.generateX25519PemSKey(xaPrikeyFile, xbPubkeyFile);
-                // console.log("🚀 ~ module.exports.chkWalletInfoProc ~ sharedKey2", sharedKey2)
 
                 let data = `apiKey=${apiKey}&ts=${ts}&version=${version}`;
-                console.log("🚀 ~ module.exports.chkWalletInfoProc ~ data", data)
+
 
                 let keyHex1 = sharedKey1.slice(32);
-                console.log("🚀 ~ keyHex1", keyHex1)
-                // let keyHex2 = sharedKey2.slice(32);
-                // console.log("🚀 ~ keyHex2", keyHex2)
 
                 let sig1 = cryptoApi.generateSignature(keyHex1, data);
-                console.log("🚀 ~ sig1", sig1)
-                // let sig2 = cryptoApi.generateSignature(keyHex2, data);
-                // console.log("🚀 ~ sig2", sig2)
 
                 // if (keyHex1 !== keyHex2 || signature !== sig1 || signature !== sig2) {
                 if (signature !== sig1) {
@@ -112,7 +96,7 @@ module.exports.chkClientInfo = async (apiKey, ts, version, signature, requester)
                 
             } while(0);
     } catch (err) {
-        logger.error("Error - 37");
+        logger.error("Error - cliUserControllerProc / chkClientInfo");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 
@@ -125,23 +109,24 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
     const request = reqQuery;
     let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
 
-    logger.error("func : chkWalletInfoProc 2 for TGC");
+    logger.debug("func : chkWalletInfoProc 2 for TGC");
 
     try {
+        logger.debug("apiKey : " + request.apiKey);
+        logger.debug("ts : " + request.ts);
+        logger.debug("version : " + request.version);
+        logger.debug("signature : " + request.signature);
+        logger.debug("requester : " + request.requester);
+        logger.debug("wName : " + request.wName);
+
         if (request.hasOwnProperty("apiKey") && 
             request.hasOwnProperty("ts") && 
             request.hasOwnProperty("version") &&
             request.hasOwnProperty("signature") &&
             request.hasOwnProperty("requester") && 
-            request.hasOwnProperty("wName"))
+            request.hasOwnProperty("wName") &&
+            request.wName.length)
         {
-            logger.debug("apiKey : " + request.apiKey);
-            logger.debug("ts : " + request.ts);
-            logger.debug("version : " + request.version);
-            logger.debug("signature : " + request.signature);
-            logger.debug("requester : " + request.requester);
-            logger.debug("wName : " + request.wName);
-
             do
             {
                 //
@@ -150,7 +135,7 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
 
                 // check api client is valid
                 let isValid = await this.chkClientInfo(request.apiKey, request.ts, request.version, request.signature, request.requester);
-                console.log("🚀 ~ module.exports.chkWalletInfoProc ~ isValid", isValid)
+                logger.debug("chkWalletInfoProc ~ isValid" + isValid.errorCode)
 
                 if (!isValid.errorCode) {
                     
@@ -167,8 +152,8 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
                         }
                     } else {
                         // Error Code
-                        logger.error("Error -  Check Wallet Name");
-                        ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                        logger.error("Error -  Check Wallet Name 2");
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : `Wallet : ${request.wName} is NOT registered.`}};
                         break;
                     }
                 } else {
@@ -179,7 +164,7 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
             ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
         }
     } catch (err) {
-        logger.error("Error - 38");
+        logger.error("Error - chkWalletInfoProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 

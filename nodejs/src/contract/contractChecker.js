@@ -26,9 +26,30 @@ module.exports.chkAccountDelimiter = (accountHexStr) => {
 const chkTxTokenContract = async(contractJson) => {
     let retVal = define.ERR_CODE.ERROR;
 
+    // Action
+    let action = contractJson.action;
+    if (action === define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX)
+    {
+        action = contractJson.contents.action;
+    }
+
     // Check User Account
-    let fromAccount = util.hexStrToBigInt(contractJson.from_account);
-    let toAccount = util.hexStrToBigInt(contractJson.to_account);
+    let toAccountHexStr = contractJson.to_account;
+    logger.debug("toAccountHexStr: " + toAccountHexStr);
+    let fromAccountHexStr = contractJson.from_account;
+    logger.debug("fromAccountHexStr: " + fromAccountHexStr);
+    let dstAccountHexStr;
+
+    let toAccount = util.hexStrToBigInt(toAccountHexStr);
+    let fromAccount = util.hexStrToBigInt(fromAccountHexStr);
+
+    logger.debug("token action: " + action);
+    if (action) {
+        dstAccountHexStr = contractJson.contents.dst_account;
+        logger.debug("dstAccountHexStr: " + dstAccountHexStr);
+        toAccountHexStr = dstAccountHexStr;
+        toAccount = util.hexStrToBigInt(dstAccountHexStr);
+    }
 
     //
     let fAccountDeli = this.chkAccountDelimiter(contractJson.from_account);
@@ -63,13 +84,6 @@ const chkTxTokenContract = async(contractJson) => {
     //     return retVal;
     // }
     
-    // Action
-    let action = contractJson.action;
-    if (action === define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX)
-    {
-        action = contractJson.contents.action;
-    }
-
     // Check Token Account
     let tokenAccount = await dbNNHandler.accountTokenCheck(action);
     if (!tokenAccount.length)
@@ -129,7 +143,27 @@ const chkTxTokenContract = async(contractJson) => {
     }
 
     // black_list
-    // TODO
+    if (tokenAccount[0].black_list) {
+        let blackListAll = JSON.parse(tokenAccount[0].black_list);
+        logger.debug("JSON.stringify(blackListAll): " + JSON.stringify(blackListAll));
+        let blackListAccNum = blackListAll.black_acc_num_list;
+        logger.debug("blackListAccNum: " + blackListAccNum);
+
+        if (blackListAccNum) {
+            let isToAccountOnBlackList = blackListAccNum.indexOf(toAccountHexStr);
+            if (isToAccountOnBlackList > -1 && toAccountHexStr == blackListAccNum[isToAccountOnBlackList]) {
+                logger.error("chkTxTokenContract - User To Account is on Black List");
+                return retVal;
+            }
+
+            let isFromAccountOnBlackList = blackListAccNum.indexOf(fromAccountHexStr);
+            if (isFromAccountOnBlackList > -1 && fromAccountHexStr == blackListAccNum[isFromAccountOnBlackList]) {
+                logger.error("chkTxTokenContract - User From Account is on Black List");
+                return retVal;
+            }
+        }
+    }
+    
     logger.debug('contractJson.contents.amount : ' + contractJson.contents.amount);
     // Check Decimal Point
     let splitAmount = util.chkDecimalPoint(contractJson.contents.amount);
@@ -178,7 +212,7 @@ const chkTxTokenContract = async(contractJson) => {
         }
 
         //
-        logger.debug ("contractJson.from_account : " + contractJson.from_account.toString() + ", SEC_TOKEN_ACCOUNT : " + define.CONTRACT_DEFINE.SEC_TOKEN_ACCOUNT);
+        logger.debug ("contractJson.from_account : " + contractJson.from_account.toString());
         if (contractJson.from_account === define.CONTRACT_DEFINE.SEC_TOKEN_ACCOUNT)
         {
             logger.debug ("SECURITY TOKEN DISTRIBUTTED BY TOKEN ACCOUNT");
@@ -236,14 +270,15 @@ const chkTxTokenContract = async(contractJson) => {
         }
 
         //
-        let dstAccount = util.hexStrToBigInt(contractJson.contents.dst_account);
+        let dstAccount = util.hexStrToBigInt(dstAccountHexStr);
         let dAccount = await dbNNHandler.accountUserAccountNumCheck(dstAccount);
         if(!dAccount.length)
         {
             logger.error("chkTxTokenContract - dstAccount : No Account");
-            return define.ERR_CODE.ERROR;
+            return retVal;
         }
 
+        toAccount = util.hexStrToBigInt(contractJson.to_account);
         tAccount = await dbNNHandler.accountTokenAccountCheck(toAccount);
     }
     else if(tAccountDeli <= define.CONTRACT_DEFINE.ACCOUNT_USER_DELI_MAX) // Security Token
@@ -274,7 +309,258 @@ const chkTxTokenContract = async(contractJson) => {
     if(!tAccount.length)
     {
         logger.error("chkTxTokenContract - toAccount : No Account 2");
-        return define.ERR_CODE.ERROR;
+        return retVal;
+    }
+
+    retVal = define.ERR_CODE.SUCCESS;
+
+    return retVal;
+}
+
+//
+const chkMultiTxTokenContract = async(contractJson) => {
+    let retVal = define.ERR_CODE.ERROR;
+
+    // Check User Account
+    let fromAccount = util.hexStrToBigInt(contractJson.from_account).toString();
+    logger.debug("fromAccount: " + fromAccount);
+
+    //
+    let fAccountDeli = this.chkAccountDelimiter(contractJson.from_account);
+
+    // Action
+    let action = contractJson.contents.action;
+
+    // Check Token Account
+    let tokenAccount = await dbNNHandler.accountTokenCheck(action);
+    if (!tokenAccount.length)
+    {
+        logger.error("chkMultiTxTokenContract - account_token action");
+        return retVal;
+    }
+
+    //
+    if (!BigInt(tokenAccount[0].blk_num))
+    {
+        logger.error("chkMultiTxTokenContract - account_token blk_num");
+        return retVal;
+    }
+
+    // lock_transfer
+    if (tokenAccount[0].lock_transfer === define.CONTRACT_DEFINE.LOCK_TOKEN_TX.LOCK_ALL)
+    {
+        logger.error("chkMultiTxTokenContract - account_token lock_transfer ALL");
+        return retVal;
+    }
+    else if (tokenAccount[0].lock_transfer === define.CONTRACT_DEFINE.LOCK_TOKEN_TX.LOCK_EXC_OWNER)
+    {
+        if (contractJson.signed_pubkey !== tokenAccount.owner_pk)
+        {
+            logger.error("chkMultiTxTokenContract - account_token lock_transfer EXCLUDING OWNER");
+            return retVal;
+        }
+    }
+
+    // lock_time
+    let curTime = util.getDateMS();
+    if ((tokenAccount[0].lock_time_from !== define.CONTRACT_DEFINE.LOCK_TOKEN_TIME.UNLOCK)
+        && (tokenAccount[0].lock_time_to !== define.CONTRACT_DEFINE.LOCK_TOKEN_TIME.UNLOCK))
+    {
+        if (tokenAccount[0].lock_time_from <= curTime && curTime <= tokenAccount[0].lock_time_to)
+        {
+            logger.error("chkMultiTxTokenContract - account_token lock_time ALL");
+            return retVal;
+        }
+    }
+    else if (tokenAccount[0].lock_time_from !== define.CONTRACT_DEFINE.LOCK_TOKEN_TIME.UNLOCK)
+    {
+        if (tokenAccount[0].lock_time_from <= curTime)
+        {
+            logger.error("chkMultiTxTokenContract - account_token lock_time FROM");
+            return retVal;
+        }
+    }
+    else if (tokenAccount[0].lock_time_to !== define.CONTRACT_DEFINE.LOCK_TOKEN_TIME.UNLOCK)
+    {
+        if (curTime <= tokenAccount[0].lock_time_to)
+        {
+            logger.error("chkMultiTxTokenContract - account_token lock_time TO");
+            return retVal;
+        }
+    }
+
+    // black_list
+    if (tokenAccount[0].black_list) {
+        let blackListAll = JSON.parse(tokenAccount[0].black_list);
+        let blackListAccNum = blackListAll.black_acc_num_list;
+        if (blackListAccNum) {
+            let isFromAccountOnBlackList = blackListAccNum.indexOf(contractJson.from_account);
+            if (isFromAccountOnBlackList > -1 && contractJson.from_account == blackListAccNum[isFromAccountOnBlackList]) {
+                logger.error("chkMultiTxTokenContract - User From Account is on Black List");
+                return retVal;
+            }
+        }
+    }
+
+    //
+    let myTxInfo = JSON.parse(contractJson.contents.tx_info);
+
+    // Check duplicated txAccount in txInfo
+    let myDupl = util.findDuplArrByField(myTxInfo, 'dst_account');
+
+    if (myDupl.length)
+    {
+        // Error Code
+        logger.error("chkMultiTxTokenContract - Duplicated dst_account");
+        return retVal;
+    }
+
+    //
+    let totAmount = '0';
+
+    await util.asyncForEach(myTxInfo, async(element, index) => {
+        let myDstAccount = util.hexStrToBigInt(element.dst_account);
+        let myAmount = element.amount;
+
+        //
+        uToAccountInfo = await dbNNHandler.getUserAccountByAccountNum(myDstAccount);
+
+        if (uToAccountInfo === false)
+        {
+            logger.error("chkMultiTxTokenContract - None User Account Info");
+            return retVal;
+        }
+        else
+        {
+            let toAccount = uToAccountInfo.account_num;
+            logger.debug("toAccount: " + toAccount);
+            let toAccountHexStr = BigInt(toAccount).toString(16);
+
+            if (fromAccount === toAccount) {
+                logger.error("chkMultiTxTokenContract - Check fromAccount & toAccount");
+                return retVal;
+            }
+            else {
+                // Check Decimal Point
+                let splitAmount = util.chkDecimalPoint(myAmount);
+                
+                logger.debug('splitAmount.length : ' + splitAmount.length);
+                logger.debug('splitAmount[1].length : ' + splitAmount[1].length);
+
+                if (splitAmount.length !== 2)
+                {
+                    logger.error("chkMultiTxTokenContract - No amount decimal_point");
+                    return retVal;
+                }
+                else if (splitAmount[1].length !== tokenAccount[0].decimal_point)
+                {
+                    logger.error("chkMultiTxTokenContract - invalid amount decimal_point length");
+                    return retVal;
+                }
+
+                if (tokenAccount[0].black_list) {
+                    let blackListAll = JSON.parse(tokenAccount[0].black_list);
+                    let blackListAccNum = blackListAll.black_acc_num_list;
+                    logger.debug("blackListAccNum: " + blackListAccNum)
+                    if (blackListAccNum) {
+                        let isToAccountOnBlackList = blackListAccNum.indexOf(toAccountHexStr);
+                        if (isToAccountOnBlackList > -1 && toAccountHexStr == blackListAccNum[isToAccountOnBlackList]) {
+                            logger.error("chkMultiTxTokenContract - User To Account is on Black List");
+                            return retVal;
+                        }
+                    }
+                    // else {
+                    //     //
+                    //     totAmount = util.calNum(totAmount, '+', myAmount, tokenAccount[0].decimal_point);
+                    //     logger.info('totAmount : ' + totAmount);
+                    // }
+                }
+                // else
+                // {
+                //     //
+                //     totAmount = util.calNum(totAmount, '+', myAmount, tokenAccount[0].decimal_point);
+                //     logger.info('totAmount : ' + totAmount);
+                // }
+                totAmount = util.calNum(totAmount, '+', myAmount, tokenAccount[0].decimal_point);
+                logger.info('totAmount : ' + totAmount);
+            }
+        }
+    });
+
+    //
+    if (contractJson.contents.total_amount !== totAmount)
+    {
+        logger.error("chkMultiTxTokenContract - Different total_amount : " + contractJson.contents.total_amount + ', ' + totAmount);
+        return retVal;
+    }
+
+    // Check From Account
+    let fAccount;
+
+    if(fAccountDeli === define.CONTRACT_DEFINE.ACCOUNT_TOKEN_DELI)
+    {
+        fAccount = await dbNNHandler.accountTokenAccountCheck(fromAccount);
+    }
+    else if(fAccountDeli <= define.CONTRACT_DEFINE.ACCOUNT_USER_DELI_MAX)
+    {
+        fAccount = await dbNNHandler.accountUserAccountNumCheck(fromAccount);
+    }
+    else
+    {
+        logger.error("chkMultiTxTokenContract - fromAccount : No Account");
+        return retVal;
+    }
+
+    if(fAccount.length)
+    {
+        let fa_owner_pk = fAccount[0].owner_pk;
+        //
+        if (contractJson.signed_pubkey !== fa_owner_pk)
+        {
+            logger.debug ("contractJson.signed_pubkey : " + contractJson.signed_pubkey);
+            logger.debug ("fa_owner_pk : " + fa_owner_pk);
+            logger.error("chkMultiTxTokenContract - signed_pubkey");
+            return retVal;
+        }
+
+        //
+        logger.debug ("contractJson.from_account : " + contractJson.from_account.toString());
+        if (contractJson.from_account === define.CONTRACT_DEFINE.SEC_TOKEN_ACCOUNT)
+        {
+            logger.debug ("SECURITY TOKEN DISTRIBUTTED BY TOKEN ACCOUNT");
+
+            logger.error("chkMultiTxTokenContract - Multi Transaction is NOT Support SEC_TOKEN_ACCOUNT");
+            return retVal;
+        }
+        else
+        {
+            logger.debug ("TOKEN DISTRIBUTTED BY USER ACCOUNT OR TOKEN ACCOUNT");
+            let fAccountLeger = await dbNNHandler.accountLegerCheck(fromAccount, action);
+
+            if (!fAccountLeger.length)
+            {
+                logger.error("chkMultiTxTokenContract - account_ledger");
+                return retVal;
+            }
+            else if (!BigInt(tokenAccount[0].blk_num))
+            {
+                logger.error("chkMultiTxTokenContract - account_ledger blk_num");
+                return retVal;
+            }
+    
+            logger.debug('fAccountLeger[0].balance : ' + fAccountLeger[0].balance + ', totAmount : ' + totAmount);
+            let balVal = util.balNum(fAccountLeger[0].balance, totAmount, tokenAccount[0].decimal_point);
+            if (balVal === false)
+            {
+                logger.error("chkMultiTxTokenContract - balance");
+                return retVal;
+            }
+        }
+    }
+    else
+    {
+        logger.error("chkMultiTxTokenContract - fromAccount");
+        return retVal;
     }
 
     retVal = define.ERR_CODE.SUCCESS;
@@ -325,10 +611,10 @@ const chkTxUtilTokenContract = async(contractJson) => {
 const chkTokenTxContract = async(contractJson) => {
     let retVal = define.ERR_CODE.ERROR;
 
-    //
-    logger.debug('action : ' + contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.ACTION));
-    logger.debug('action : ' + contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.AMOUNT));
-    logger.debug('action : ' + contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.DST_ACCOUNT));
+    // //
+    // logger.debug('action : ' + contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.ACTION));
+    // logger.debug('AMOUNT : ' + contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.AMOUNT));
+    // logger.debug('DST_ACCOUNT : ' + contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.DST_ACCOUNT));
     if (!(contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.ACTION)
         && contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_TX.AMOUNT)))
     {
@@ -347,6 +633,28 @@ const chkTokenTxContract = async(contractJson) => {
     }
 
     retVal = await chkTxTokenContract(contractJson);
+    if (retVal !== define.ERR_CODE.SUCCESS)
+    {
+        return retVal;
+    }
+
+    return define.ERR_CODE.SUCCESS;
+}
+
+const chkTokenMultiTxContract = async(contractJson) => {
+    let retVal = define.ERR_CODE.ERROR;
+
+    //
+    if (!(contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_MULTI_TX.ACTION)
+        && contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_MULTI_TX.TOKEN_ACCOUNT)
+        && contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_MULTI_TX.TOTAL_AMOUNT)
+        && contractJson.contents.hasOwnProperty(define.CONTRACT_DEFINE.CONTENTS_PROPERTY.TOKEN_MULTI_TX.TX_INFO)))
+    {
+        logger.error("chkTokenMultiTxContract - Contents");
+        return retVal;
+    }
+
+    retVal = await chkMultiTxTokenContract(contractJson);
     if (retVal !== define.ERR_CODE.SUCCESS)
     {
         return retVal;
@@ -774,9 +1082,9 @@ const chkTransferScContract = async(contractJson) => {
     }
 
     //
-    let sc_action = contractJson.action;
+    logger.debug('contractJson: ' + JSON.stringify(contractJson));
+    
     let sc = contractJson.contents.sc;
-
     if(!util.isJsonString(sc))
     {
         logger.error("chkTransferScContract - Invalid sc json value");
@@ -784,8 +1092,10 @@ const chkTransferScContract = async(contractJson) => {
     }
 
     //
+    let sc_action = contractJson.action;
+    // check sc_action range
     if ((sc_action < define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.STT) ||
-        (sc_action > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.END))
+        (sc_action > define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.END))
     {
         logger.error("chkTransferScContract - Invalid scAction Range");
         return define.ERR_CODE.ERROR;
@@ -793,31 +1103,88 @@ const chkTransferScContract = async(contractJson) => {
 
     //
     let scActionAccount = await dbNNHandler.accounScActionAndTargetCheck(sc_action);
-    // logger.debug("scActionAccount.length : " + scActionAccount.length);
+    logger.debug("scActionAccount : " + JSON.stringify(scActionAccount));
     if (!scActionAccount.length)
     {
         logger.error("chkCreateScContract - Invalid scAction 2");
         return define.ERR_CODE.ERROR;
     }
 
-    // //
-    // let action_target = scActionAccount[0].action_target;
+    // check toAccount
+    let toAccountBInt = util.hexStrToBigInt(contractJson.to_account);
+    logger.debug('contractJson - to_account_num to bigint: ' + toAccountBInt);
 
-    // let tokenAccount = await dbNNHandler.accountTokenCheck(action_target);
-    // // logger.debug("tokenAccount.length : " + tokenAccount.length);
-    // if (!tokenAccount.length)
-    // {
-    //     logger.error("chkCreateScContract - Invalid Action");
-    //     return define.ERR_CODE.ERROR;
-    // }
+    let userToAccount = await dbNNHandler.accountUserAccountNumCheck(toAccountBInt);
+    if (!userToAccount.length)
+    {
+        logger.error("chkTransferScContract - No User - toAccount");
+        return define.ERR_CODE.ERROR;
+    }
+    
 
-    // // logger.debug("tokenAccount[0].owner_pk : " + tokenAccount[0].owner_pk);
-    // // logger.debug("contractJson.signed_pubk : " + contractJson.signed_pubkey);
-    // if (tokenAccount[0].owner_pk !== contractJson.signed_pubkey)
-    // {
-    //     logger.error("chkCreateScContract - Invalid Signed Public Key");
-    //     return define.ERR_CODE.ERROR;
-    // }
+    // minting or tx
+    let fromAccountBInt = util.hexStrToBigInt(contractJson.from_account);
+    
+    //
+    if (!fromAccountBInt) {
+        logger.info("contractChecker / sc transfer -- MINTING");
+        let action_target = scActionAccount[0].action_target;
+    
+        let tokenAccount = await dbNNHandler.accountTokenCheck(action_target);
+        // logger.debug("tokenAccount.length : " + tokenAccount.length);
+        if (!tokenAccount.length)
+        {
+            logger.error("chkCreateScContract - Invalid Action");
+            return define.ERR_CODE.ERROR;
+        }
+    
+        logger.debug("tokenAccount[0].owner_pk : " + tokenAccount[0].owner_pk);
+        logger.debug("contractJson.signed_pubkey : " + contractJson.signed_pubkey);
+
+        if (tokenAccount[0].owner_pk !== contractJson.signed_pubkey)
+        {
+            logger.error("chkCreateScContract - Invalid Signed Public Key");
+            return define.ERR_CODE.ERROR;
+        }
+
+    } else {
+
+        //
+        logger.info("contractChecker / sc transfer -- USER to USER");
+
+        // check fromAccount
+        let userFromAccount = await dbNNHandler.accountUserAccountNumCheck(fromAccountBInt);
+        if (!userFromAccount.length)
+        {
+            logger.error("chkTransferScContract - No User - fromAccount");
+            return define.ERR_CODE.ERROR;
+        }
+        let signedPubkey = contractJson.signed_pubkey;
+        if (signedPubkey !== userFromAccount[0].super_pk)
+        {
+            logger.error("chkTransferScContract - Signed Pubkey");
+            return define.ERR_CODE.ERROR;
+        }
+
+        //
+        // check the recent owner of NFT
+        let scAction = contractJson.action;
+        let scParse = JSON.parse(sc);
+        let subId = scParse.sub_id;
+
+        logger.debug(`fromAccountNum: ${fromAccountBInt}, scAction: ${scAction}, subId: ${subId}`);
+        let chkRecentTx = await dbNNHandler.getUserNftInfobyScActionSubId(fromAccountBInt, scAction, subId);
+        logger.debug("chkRecentTx: " + JSON.stringify(chkRecentTx));
+        let ownerAccount = chkRecentTx[0].owner_acc_num;
+
+        logger.info("userFromAccount[0].account_num: " + userFromAccount[0].account_num);
+        logger.info("ownerAccount: " + ownerAccount);
+
+        if (userFromAccount[0].account_num !== ownerAccount) {
+            logger.error("chkTransferScContract - Not Recent Owner // compared account_num");
+            return define.ERR_CODE.ERROR;
+        }
+    }
 
     return define.ERR_CODE.SUCCESS;
 }
@@ -849,7 +1216,14 @@ module.exports.chkContract = async (contractJson) => {
     }
     else if (contractJson.action === define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX)
     {
-        retVal = await chkTokenTxContract(contractJson);
+        if (contractJson.to_account === define.CONTRACT_DEFINE.TO_DEFAULT)
+        {
+            retVal = await chkTokenMultiTxContract(contractJson);
+        }
+        else
+        {
+            retVal = await chkTokenTxContract(contractJson);
+        }
     }
     else if (contractJson.action === define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.LOCK_TOKEN_TX)
     {
@@ -876,7 +1250,7 @@ module.exports.chkContract = async (contractJson) => {
         retVal = await chkCreateScContract(contractJson);
     }
     else if ((contractJson.action >= define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.STT) &&
-             (contractJson.action <= define.CONTRACT_DEFINE.ACTIONS.CONTRACT.SC.END))
+            (contractJson.action <= define.CONTRACT_DEFINE.ACTIONS.CONTRACT.NFT.END))
     {
         retVal = await chkTransferScContract(contractJson);
     }

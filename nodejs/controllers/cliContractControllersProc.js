@@ -124,16 +124,36 @@ module.exports.inspectContract = async (reqQuery) => {
                 }
             }
 
+            // check subnet_id of from_account
+            let bigAccountNum = util.hexStrToBigInt(contractJson.from_account);
+            let fbSubNetId;
+            if (bigAccountNum) {
+                // token account
+                let tknSubNetId = await dbNNHandler.getSubNetIdByTokenAccountNum(bigAccountNum);
+                // user account
+                let usrSubNetId = await dbNNHandler.getSubNetIdByUserAccountNum(bigAccountNum);
+
+                if (usrSubNetId) {
+                    fbSubNetId = usrSubNetId;
+                } else {
+                    fbSubNetId = tknSubNetId;
+                }
+            } else {
+                // get data from fb.repl_info
+                let query_result = await dbFBHandler.getReplData();
+                let fbSubNetIdHex = query_result[0].subnet_id;
+                fbSubNetId = parseInt(fbSubNetIdHex, 16);
+            }
             //
             let msg = contractJson;
             
             //////////////////////////////////////////////////////////////////
             //
             // get data from fb.repl_info
-            let query_result = await dbFBHandler.getReplData();
-            let fbSubNetIdHex = query_result[0].subnet_id;
-            let fbSubNetId = parseInt(fbSubNetIdHex, 16);
-            logger.info("query_result : " + fbSubNetId);
+            // let query_result = await dbFBHandler.getReplData();
+            // let fbSubNetIdHex = query_result[0].subnet_id;
+            // let fbSubNetId = parseInt(fbSubNetIdHex, 16);
+            // logger.info("query_result : " + fbSubNetId);
             
             //////////////////////////////////////////////////////////////////
             // KAFKA
@@ -250,6 +270,14 @@ module.exports.contractExe = async (reqQuery) => {
 
             ret_msg = await this.txTokenProc(contentsJson);
         }
+        else if (request.hasOwnProperty("multiTxToken"))
+        {
+            // logger.debug("multiTxToken : " + JSON.stringify(request.multiTxToken));
+
+            let contentsJson = request.multiTxToken;
+
+            ret_msg = await this.multiTxTokenProc(contentsJson);
+        }
         else if (request.hasOwnProperty("createSc"))
         {
             // logger.debug("createSc : " + JSON.stringify(request.createSc));
@@ -307,6 +335,9 @@ module.exports.addUserProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+
                 //
                 let accountIdUpperCase = request.accountId.toUpperCase();
                 let regexResult = define.REGEX.ID_REGEX.test(accountIdUpperCase);
@@ -381,7 +412,7 @@ module.exports.addUserProc = async (reqQuery) => {
                 }
 
                 //////////////////////////////////////////////////////////////////
-                let tcAddUser = await contractProc.cAddUser(request.ownerPubkey, request.superPubkey, accountIdUpperCase, request.ownerPrikey, request.ownerPrikeyPw);
+                let tcAddUser = await contractProc.cAddUser(createTm, request.ownerPubkey, request.superPubkey, accountIdUpperCase, request.ownerPrikey, request.ownerPrikeyPw);
                 logger.debug("tcAddUser : " + JSON.stringify(tcAddUser));
                 // let contractJson = JSON.stringify(tcAddUser);
 
@@ -405,16 +436,16 @@ module.exports.addUserProc = async (reqQuery) => {
                 let query_result = await dbFBHandler.getReplData();
                 let fbSubNetIdHex = query_result[0].subnet_id;
                 let fbSubNetId = parseInt(fbSubNetIdHex, 16);
-                logger.debug("query_result : " + fbSubNetId);
+                logger.debug("fbSubNetId : " + fbSubNetId);
 
                 //////////////////////////////////////////////////////////////////
                 // KAFKA
                 // Get Kafka Info
                 // apiPath = `/kafka/broker/list?all`;
                 apiPath = `/kafka/broker/list?subNetId=${fbSubNetId}`;
-                logger.info("KAFKA apiPath : " + apiPath);
+                logger.debug("KAFKA apiPath : " + apiPath);
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
-                logger.info("KAFKA apiRes : " + JSON.stringify(apiRes));
+                logger.debug("KAFKA apiRes : " + JSON.stringify(apiRes));
 
                 if (apiRes.errorCode)
                 {
@@ -474,6 +505,10 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
 
             do
             {
+
+                //
+                const createTm = util.getDateMS().toString();
+
                 // Owner Public Key
                 //
                 if (request.ownerPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
@@ -540,18 +575,19 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
                 // logger.debug("apiVal2Dec : " + apiVal2Dec);
         
                 //
-                apiPath = `${apiRoutePath}?${apiKey2}=${apiVal2}&${apiKey3}=${apiVal3}`;
+                apiPath = `${apiRoutePath}?${apiKey2}=${apiVal2}`;
+                // apiPath = `${apiRoutePath}?${apiKey2}=${apiVal2}&${apiKey3}=${apiVal3}`;
                 logger.debug("apiPath : " + apiPath);
         
                 //
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
-                logger.debug("apiRes : " + JSON.stringify(apiRes));
-                if ((!apiRes.errorCode) && 
-                    (apiRes.contents.hasOwnProperty("uAccountInfo")) &&
-                    (request.accountId != apiRes.contents.uAccountInfo.account_id)) // Existed
+                logger.debug("chk info 1 - apiRes : " + JSON.stringify(apiRes));
+                if ((!apiRes.errorCode)
+                    && (apiRes.contents.hasOwnProperty("uAccountInfo")))
+                    // && (request.accountId != apiRes.contents.uAccountInfo.account_id)) // Existed
                 {
                     // Error Code
-                    logger.debug("One of pubkey is already existed.");
+                    logger.error("One of pubkey is already existed.");
                     ret_msg = { errorCode : define.ERR_MSG.ERR_EXIST_PUBKEY.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_EXIST_PUBKEY.MSG}};
                     break;
                 }
@@ -571,10 +607,10 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
         
                 //
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
-                logger.debug("apiRes : " + JSON.stringify(apiRes));
+                logger.debug("chk info 2 - apiRes : " + JSON.stringify(apiRes));
                 if (apiRes.errorCode) // NOT Existed
                 {
-                    logger.debug("Account Id does NOT existed.");
+                    logger.error("Account Id does NOT existed.");
 
                     // Error Code
                     ret_msg = { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
@@ -591,7 +627,7 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
                 if ((apiRes.contents.uAccountInfo.owner_pk === request.ownerPubkey) && 
                     (apiRes.contents.uAccountInfo.super_pk === request.superPubkey))
                 {
-                    logger.debug("Requested pubkey is eqauls to previous keys.");
+                    logger.error("Requested pubkey is eqauls to previous keys.");
 
                     // Error Code
                     ret_msg = { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
@@ -600,11 +636,12 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
 
                 let accountNum = apiRes.contents.uAccountInfo.account_num;
                 //////////////////////////////////////////////////////////////////
-
+                let fbSubNetId = apiRes.contents.uAccountInfo.subnet_id;
                 //
                 let accountNumHexStr = BigInt(accountNum).toString(16);
 
-                let tcChangeUserPk = await contractProc.cChangeUserPk(accountNumHexStr, request.ownerPubkey, request.superPubkey, request.accountId, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
+                //
+                let tcChangeUserPk = await contractProc.cChangeUserPk(createTm, accountNumHexStr, request.ownerPubkey, request.superPubkey, request.accountId, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
 
                 if (tcChangeUserPk === false)
                 {
@@ -633,7 +670,8 @@ module.exports.changeUserPubkeyProc = async (reqQuery) => {
                 //////////////////////////////////////////////////////////////////
                 // KAFKA
                 // Get Kafka Info
-                apiPath = `/kafka/broker/list?all`;
+                // apiPath = `/kafka/broker/list?all`;
+                apiPath = `/kafka/broker/list?subNetId=${fbSubNetId}`;
                 logger.debug("KAFKA apiPath : " + apiPath);
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
                 logger.debug("KAFKA apiRes : " + JSON.stringify(apiRes));
@@ -712,6 +750,9 @@ module.exports.createTokenProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+                
                 //////////////////////////////////////////////////////////////////
                 // Super Public Key
                 //
@@ -844,7 +885,7 @@ module.exports.createTokenProc = async (reqQuery) => {
                     // let decimalPoint = define.CONTRACT_DEFINE.NANO_DECIMAL_POINT;
 
                     // 
-                    let tcCreateT = await contractProc.cCreateToken(request.ownerPubkey, request.superPubkey, request.ownerPrikey, request.ownerPrikeyPw, 
+                    let tcCreateT = await contractProc.cCreateToken(createTm, request.ownerPubkey, request.superPubkey, request.ownerPrikey, request.ownerPrikeyPw, 
                                                         tokenAction, tokenName, tokenSymbol, totalSupply, decimalPoint);
 
                     if (tcCreateT === false)
@@ -876,8 +917,8 @@ module.exports.createTokenProc = async (reqQuery) => {
                     let query_result = await dbFBHandler.getReplData();
                     let fbSubNetIdHex = query_result[0].subnet_id;
                     let fbSubNetId = parseInt(fbSubNetIdHex, 16);
-                    logger.debug("query_result : " + fbSubNetId);
-
+                    logger.debug("fbSubNetId : " + fbSubNetId);
+                    
                     //////////////////////////////////////////////////////////////////
                     // KAFKA
                     // Get Kafka Info
@@ -953,6 +994,10 @@ module.exports.changeTokenPubkeyProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+
+                //
                 // Owner Public Key
                 //
                 if (request.ownerPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
@@ -1080,7 +1125,7 @@ module.exports.changeTokenPubkeyProc = async (reqQuery) => {
                 //
                 let accountNumHexStr = BigInt(accountNum).toString(16);
 
-                let tcChangeTokenPk = await contractProc.cChangeTokenPk(accountNumHexStr, request.ownerPubkey, request.superPubkey, request.tokenAction, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
+                let tcChangeTokenPk = await contractProc.cChangeTokenPk(createTm, accountNumHexStr, request.ownerPubkey, request.superPubkey, request.tokenAction, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
 
                 if (tcChangeTokenPk === false)
                 {
@@ -1173,6 +1218,9 @@ module.exports.changeTokenLockTxProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+
                 // Registered Super Public Key
                 //
                 if (request.regSuperPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
@@ -1240,7 +1288,7 @@ module.exports.changeTokenLockTxProc = async (reqQuery) => {
                 //
                 let accountNumHexStr = BigInt(accountNum).toString(16);
 
-                let tcChangeTokenLockTx = await contractProc.cChangeTokenLockTx(accountNumHexStr, request.tokenAction, request.lockTx, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
+                let tcChangeTokenLockTx = await contractProc.cChangeTokenLockTx(createTm, accountNumHexStr, request.tokenAction, request.lockTx, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
 
                 if (tcChangeTokenLockTx === false)
                 {
@@ -1335,6 +1383,9 @@ module.exports.changeTokenLockTimeProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+
                 // Registered Super Public Key
                 //
                 if (request.regSuperPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
@@ -1421,7 +1472,7 @@ module.exports.changeTokenLockTimeProc = async (reqQuery) => {
                 //
                 let accountNumHexStr = BigInt(accountNum).toString(16);
 
-                let tcChangeTokenLockTime = await contractProc.cChangeTokenLockTime(accountNumHexStr, request.tokenAction, request.lockTimeFrom, request.lockTimeTo, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
+                let tcChangeTokenLockTime = await contractProc.cChangeTokenLockTime(createTm, accountNumHexStr, request.tokenAction, request.lockTimeFrom, request.lockTimeTo, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
 
                 if (tcChangeTokenLockTime === false)
                 {
@@ -1516,6 +1567,9 @@ module.exports.changeTokenLockWalletProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+                
                 // Registered Super Public Key
                 //
                 if (request.regSuperPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN) {
@@ -1578,7 +1632,7 @@ module.exports.changeTokenLockWalletProc = async (reqQuery) => {
                 //
                 let accountNumHexStr = BigInt(accountNum).toString(16);
 
-                let tcChangeTokenLockWallet = await contractProc.cChangeTokenLockWallet(accountNumHexStr, request.tokenAction, request.blackPkList, request.whitePkList, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
+                let tcChangeTokenLockWallet = await contractProc.cChangeTokenLockWallet(createTm, accountNumHexStr, request.tokenAction, request.blackPkList, request.whitePkList, request.regSuperPubkey, request.regSuperPrikey, request.regSuperPrikeyPw);
 
                 if (tcChangeTokenLockWallet === false)
                 {
@@ -1675,6 +1729,9 @@ module.exports.txTokenProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+
                 // //
                 // let apiPath;
                 // let apiRes;
@@ -1682,8 +1739,8 @@ module.exports.txTokenProc = async (reqQuery) => {
                 //
                 let decimal_point;
                 let subNetId;
-                let fromAccount;
-                let toAccount;
+                let fromAccount, fromAccountHexStr;
+                let toAccount, toAccountHexStr;
                 let tokenAccount;
 
                 // Check Account Action // Token Number 
@@ -1730,6 +1787,9 @@ module.exports.txTokenProc = async (reqQuery) => {
                 if ((Number(request.tAccountAction) === define.CONTRACT_DEFINE.ACTIONS.TOKEN.SECURITY_TOKEN) && (request.ownerPubkey === tAccountInfo.owner_pk))
                 {
                     //
+                    logger.info("SECURITY TOKEN DISTRIBUTTED BY TOKEN ACCOUNT");
+                    //
+
                     fromAccount = tAccountInfo.account_num;
 
                     subNetId = tAccountInfo.subnet_id;
@@ -1747,6 +1807,10 @@ module.exports.txTokenProc = async (reqQuery) => {
                 }
                 else
                 {
+                    //
+                    logger.info("TOKEN DISTRIBUTTED BY USER ACCOUNT OR UTILITY TOKEN ACCOUNT");
+                    //
+                    
                     if (request.fromAccount === define.CONTRACT_DEFINE.FROM_DEFAULT)
                     {
                         // // Check Security Token
@@ -1757,7 +1821,8 @@ module.exports.txTokenProc = async (reqQuery) => {
                         //     break;
                         // }
 
-                        // fromAccount = request.fromAccount;
+                        // Utility Token Account
+                        logger.info("TOKEN DISTRIBUTTED BY UTILITY TOKEN ACCOUNT");
                         fromAccount = tokenAccount;
                         logger.debug("fromAccount : " + fromAccount);
 
@@ -1777,6 +1842,9 @@ module.exports.txTokenProc = async (reqQuery) => {
                     else
                     {
                         //
+                        logger.info("TOKEN DISTRIBUTTED BY USER ACCOUNT");
+                        //
+
                         if (tAccountInfo.lock_transfer === define.CONTRACT_DEFINE.LOCK_TOKEN_TX.LOCK_EXC_OWNER) {
                             logger.error("Error - TX LOCK : LOCK_EXC_OWNER");
                             ret_msg = { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_TX.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_TX.MSG}};
@@ -1804,17 +1872,24 @@ module.exports.txTokenProc = async (reqQuery) => {
                         //
                         // fromAccount = request.fromAccount;
                         fromAccount = uFromAccountInfo.account_num;
+                        fromAccountHexStr = BigInt(fromAccount).toString(16);
+                        logger.debug("fromAccountHexStr: " + fromAccountHexStr);
                         
                         if (tAccountInfo.black_list) {
                             let blackListAll = JSON.parse(tAccountInfo.black_list);
                             let blackListAccNum = blackListAll.black_acc_num_list;
-                            let isBlackList = blackListAccNum.indexOf(fromAccount);
-                    
-                            if (isBlackList > -1 && fromAccount == blackListAccNum[isBlackList]) {
-                                // Error Code
-                                logger.error("User Account is on Black List");
-                                ret_msg =  { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.MSG}};
-                                break;
+                            logger.debug("blackListAccNum: " + JSON.stringify(blackListAccNum));
+
+                            if (blackListAccNum) {
+                                let isBlackList = blackListAccNum.indexOf(fromAccountHexStr);
+                                logger.debug("isBlackList: " + isBlackList);
+                        
+                                if (isBlackList > -1 && fromAccountHexStr == blackListAccNum[isBlackList]) {
+                                    // Error Code
+                                    logger.error("User Account is on Black List");
+                                    ret_msg =  { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.MSG}};
+                                    break;
+                                }
                             }
                         }
                         logger.debug("fromAccount : " + fromAccount);
@@ -1868,34 +1943,47 @@ module.exports.txTokenProc = async (reqQuery) => {
 
                 // toAccount = request.toAccount;
                 toAccount = uToAccountInfo.account_num;
+                toAccountHexStr = BigInt(toAccount).toString(16);
+                logger.debug("toAccountHexStr: " + toAccountHexStr);
 
                 if (tAccountInfo.black_list) {
                     let blackListAll = JSON.parse(tAccountInfo.black_list);
                     let blackListAccNum = blackListAll.black_acc_num_list;
-                    let isBlackList = blackListAccNum.indexOf(toAccount);
-            
-                    if (isBlackList > -1 && toAccount == blackListAccNum[isBlackList]) {
-                        // Error Code
-                        logger.error("User Account is on Black List");
-                        ret_msg =  { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.MSG}};
-                        break;
+                    logger.debug("blackListAccNum: " + JSON.stringify(blackListAccNum));
+
+                    if (blackListAccNum) {
+                        let isBlackList = blackListAccNum.indexOf(toAccountHexStr);
+                        logger.debug("isBlackList: " + isBlackList);
+                
+                        if (isBlackList > -1 && toAccountHexStr == blackListAccNum[isBlackList]) {
+                            // Error Code
+                            logger.error("User Account is on Black List");
+                            ret_msg =  { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.MSG}};
+                            break;
+                        }
                     }
                 }
 
-                toSubNetId = uToAccountInfo.subnet_id;
-                logger.debug("toAccount : " + toAccount);
-                logger.debug("toSubNetId : " + toSubNetId);
+                // let toSubNetId = uToAccountInfo.subnet_id;
+                // logger.debug("toAccount : " + toAccount);
+                // logger.debug("toSubNetId : " + toSubNetId);
 
                 // Check Balance
                 // if (request.ownerPubkey === cryptoUtil.getIsPubkey())
-                if (Number(request.tAccountAction) === define.CONTRACT_DEFINE.ACTIONS.TOKEN.SECURITY_TOKEN)
+                fromAccountHexStr = BigInt(fromAccount).toString(16);
+                logger.debug("fromAccountHexStr: " + fromAccountHexStr);
+                if (fromAccountHexStr === define.CONTRACT_DEFINE.SEC_TOKEN_ACCOUNT)
                 {
                     //
-                    logger.debug("request.tAccountAction === SECURITY_TOKEN");
+                    logger.debug ("SECURITY TOKEN DISTRIBUTTED BY TOKEN ACCOUNT");
                 }
                 else
                 {
+                    //
+                    logger.debug ("TOKEN DISTRIBUTTED BY USER ACCOUNT OR TOKEN ACCOUNT");
+                    
                     let myBal = await dbNNHandler.getAccountBalanceByAccountNumAndAction(fromAccount, request.tAccountAction);
+                    logger.debug("myBal: " + JSON.stringify(myBal));
                     if (myBal !== define.ERR_CODE.ERROR)
                     {
                         if (Number(myBal.balance) >= Number(request.amount))
@@ -1919,8 +2007,8 @@ module.exports.txTokenProc = async (reqQuery) => {
                 }
 
                 //
-                let fromAccountHexStr = BigInt(fromAccount).toString(16);
-                let toAccountHexStr = BigInt(toAccount).toString(16);
+                // let fromAccountHexStr = BigInt(fromAccount).toString(16);
+                // let toAccountHexStr = BigInt(toAccount).toString(16);
                 let tokenAccountHexStr = BigInt(tokenAccount).toString(16);
 
                 logger.debug("fromAccountHexStr : " + fromAccountHexStr);
@@ -1939,7 +2027,7 @@ module.exports.txTokenProc = async (reqQuery) => {
                     break;
                 }
 
-                let tcTxToken = await contractProc.cTxToken2(fromAccountHexStr, toAccountHexStr, tokenAccountHexStr, Number(request.tAccountAction), request.amount, request.ownerPubkey, request.ownerPrikey, request.ownerPrikeyPw);
+                let tcTxToken = await contractProc.cTxToken2(createTm, fromAccountHexStr, toAccountHexStr, tokenAccountHexStr, Number(request.tAccountAction), request.amount, request.ownerPubkey, request.ownerPrikey, request.ownerPrikeyPw);
 
                 if (tcTxToken === false)
                 {
@@ -2010,6 +2098,433 @@ module.exports.txTokenProc = async (reqQuery) => {
 }
 
 //
+module.exports.multiTxTokenProc = async (reqQuery) => {
+    const request = reqQuery;
+    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
+
+    logger.debug("func : multiTxTokenProc");
+
+    try {
+        if (request.hasOwnProperty("tAccountAction") && 
+            request.hasOwnProperty("fromAccount") && 
+            request.hasOwnProperty("txInfo") &&
+            request.hasOwnProperty("ownerPrikey") &&
+            request.hasOwnProperty("ownerPrikeyPw") && 
+            request.hasOwnProperty("ownerPubkey"))
+        {
+            logger.debug("tAccountAction : " + request.tAccountAction);
+            logger.debug("fromAccount : " + request.fromAccount);
+            logger.debug("txInfo : " + request.txInfo);
+            logger.debug("ownerPrikey : " + request.ownerPrikey);
+            logger.debug("ownerPrikeyPw : " + request.ownerPrikeyPw);
+            logger.debug("ownerPubkey : " + request.ownerPubkey);
+
+            do
+            {
+                //
+                const createTm = util.getDateMS().toString();
+                
+                // //
+                // let apiPath;
+                // let apiRes;
+
+                //
+                let decimal_point;
+                let subNetId;
+                let fromAccount;
+                let toAccount;
+                let tokenAccount;
+
+                // Check Account Action // Token Number 
+                let tAccountInfo = await dbNNHandler.getTokenInfoByTokenAccountAction(request.tAccountAction);
+                if (tAccountInfo === false)
+                {
+                    // Error Code
+                    logger.error("Error - Check Account Action");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_TOKEN.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_TOKEN.MSG}};
+                    break;
+                }
+
+                if (Number(tAccountInfo.lock_time_from) <= Date.now() && Date.now() <= Number(tAccountInfo.lock_time_to)) {
+                    logger.error("Error - TX LOCK : TIME LOCK");
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_TIME.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_TIME.MSG}};
+                    break;
+                }
+
+                if (tAccountInfo.lock_transfer === define.CONTRACT_DEFINE.LOCK_TOKEN_TX.LOCK_ALL) {
+                    logger.error("Error - TX LOCK : LOCK_ALL");
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_TX.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_TX.MSG}};
+                    break;
+                }
+
+                decimal_point = tAccountInfo.decimal_point;
+                logger.debug("decimal_point : " + decimal_point);
+
+                // // Check Decimal Point
+                // let splitNum = util.chkDecimalPoint(request.amount);
+
+                // if ((splitNum.length !== 2) || splitNum[1].length !== decimal_point)
+                // {
+                //     // Error Code
+                //     logger.error("Error - Check Decimal Point");
+                //     ret_msg =  { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
+                //     break;
+                // }
+
+                // Token Account
+                tokenAccount = tAccountInfo.account_num;
+
+                // Check From Account
+                if ((Number(request.tAccountAction) === define.CONTRACT_DEFINE.ACTIONS.TOKEN.SECURITY_TOKEN) && (request.ownerPubkey === tAccountInfo.owner_pk))
+                {
+                    // Error Code
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                    break;
+                }
+                else
+                {
+                    if (request.fromAccount === define.CONTRACT_DEFINE.FROM_DEFAULT)
+                    {
+                        // Error Code
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                        break;
+                    }
+                    else
+                    {
+                        //
+                        if (tAccountInfo.lock_transfer === define.CONTRACT_DEFINE.LOCK_TOKEN_TX.LOCK_EXC_OWNER) {
+                            logger.error("Error - TX LOCK : LOCK_EXC_OWNER");
+                            ret_msg = { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_TX.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_TX.MSG}};
+                            break;
+                        }
+
+                        let uFromAccountInfo;
+                        if(isNaN(request.fromAccount))
+                        {
+                            uFromAccountInfo = await dbNNHandler.getUserAccountByAccountId(request.fromAccount);
+                        }
+                        else
+                        {
+                            uFromAccountInfo = await dbNNHandler.getUserAccountByAccountNum(request.fromAccount);
+                        }
+
+                        if (uFromAccountInfo === false)
+                        {
+                            // Error Code
+                            logger.error("None User Account Info");
+                            ret_msg =  { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
+                            break;
+                        } 
+
+                        //
+                        // fromAccount = request.fromAccount;
+                        fromAccount = uFromAccountInfo.account_num;
+                        logger.debug("tAccountInfo.black_list: " + tAccountInfo.black_list);
+                        logger.debug("tAccountInfo.black_list: " + JSON.stringify(tAccountInfo.black_list));
+                        if (tAccountInfo.black_list) {
+                            let blackListAll = JSON.parse(tAccountInfo.black_list);
+                            let blackListAccNum = blackListAll.black_acc_num_list;
+                            logger.debug("backListAll: " + blackListAll);
+                            logger.debug("backListAll: " + JSON.stringify(blackListAll));
+                            logger.debug("blackListAccNum: " + blackListAccNum);
+                            logger.debug("blackListAccNum: " + JSON.stringify(blackListAccNum));
+
+                            if (blackListAccNum) {
+                                let isBlackList = blackListAccNum.indexOf(BigInt(fromAccount).toString(16));
+                                if (isBlackList > -1 && BigInt(fromAccount).toString(16) == blackListAccNum[isBlackList]) {
+                                    // Error Code
+                                    logger.error("User Account is on Black List");
+                                    ret_msg =  { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.MSG}};
+                                    break;
+                                }
+                            }
+                        }
+                        logger.debug("fromAccount : " + fromAccount);
+
+                        subNetId = uFromAccountInfo.subnet_id;
+                        logger.debug("subNetId : " + subNetId);
+
+                        // Check Owner Public Key
+                        logger.debug("uFromAccountInfo.owner_pk : " + uFromAccountInfo.owner_pk);
+                        logger.debug("request.ownerPubkey   : " + request.ownerPubkey);
+                        // if (uFromAccountInfo.owner_pk !== request.ownerPubkey)
+                        // {
+                        //     // Error Code
+                        //     ret_msg =  { errorCode : define.ERR_MSG.ERR_PUBKEY.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_PUBKEY.MSG}};
+                        //     break;
+                        // }
+                    }
+                }
+
+                //
+                let scContentsInfo = await dbNNHandler.getScContentsByFromAccountNum(fromAccount);
+                if (scContentsInfo !== false)
+                {
+                    if (scContentsInfo.confirmed === 0)
+                    {
+                        // Error Code
+                        logger.error("Contract Error : Unconfirmed Contract is existed");
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_CONTRACT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_CONTRACT.MSG}};
+                        break;
+                    }
+                }
+
+                //
+                let myTxInfo = JSON.parse(request.txInfo);
+
+                // Check duplicated txAccount in txInfo
+                let myDupl = util.findDuplArrByField(myTxInfo, 'dst_account');
+
+                if (myDupl.length)
+                {
+                    // Error Code
+                    logger.error("Duplicated dst_account");
+                    logger.error("myDupl : " + JSON.stringify(myDupl));
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
+                    break;
+                }
+
+                //
+                let uToAccountInfo;
+
+                //
+                let uToAccountInfoErr = false;
+                let blackListErr = false;
+                let fromToAccountErr = false;
+                let decimalPointErr = false;
+
+                //
+                let txInfoArr = new Array();
+                let txInfoObj = new Object();
+
+                //
+                let totAmount = '0';
+
+                await util.asyncForEach(myTxInfo, async(element, index) => {
+                    let myDstAccount = element.dst_account;
+                    let myAmount = element.amount;
+                    // let mymemo = element.memo;
+
+                    //
+                    if(isNaN(myDstAccount))
+                    {
+                        uToAccountInfo = await dbNNHandler.getUserAccountByAccountId(myDstAccount);
+                    }
+                    else
+                    {
+                        uToAccountInfo = await dbNNHandler.getUserAccountByAccountNum(myDstAccount);
+                    }
+
+                    if (uToAccountInfo === false)
+                    {
+                        // Error
+                        uToAccountInfoErr = true;
+                    }
+                    else
+                    {
+                        toAccount = uToAccountInfo.account_num;
+                        let toAccountHexStr = BigInt(toAccount).toString(16);
+
+                        if (fromAccount === toAccount) {
+                            // Error
+                            fromToAccountErr = true;
+                        }
+                        else {
+                            // Check Decimal Point
+                            let splitNum = util.chkDecimalPoint(myAmount);
+
+                            if ((splitNum.length !== 2) || splitNum[1].length !== decimal_point)
+                            {
+                                // Error Code
+                                decimalPointErr = true;
+                            }
+                            else
+                            {
+                                if (tAccountInfo.black_list) {
+                                    let blackListAll = JSON.parse(tAccountInfo.black_list);
+                                    logger.debug("blackListAll: " + blackListAll);
+                                    logger.debug("blackListAll: " + JSON.stringify(blackListAll));
+                                    let blackListAccNum = blackListAll.black_acc_num_list;
+
+                                    if (blackListAccNum) {
+                                        let isBlackList = blackListAccNum.indexOf(toAccountHexStr);
+        
+                                        if (isBlackList > -1 && toAccountHexStr == blackListAccNum[isBlackList]) {
+                                            // Error
+                                            blackListErr = true;
+                                        }
+                                    }
+                                    else {
+                                        //
+                                        txInfoObj = new Object();
+
+                                        txInfoObj.dst_account = toAccountHexStr;
+                                        txInfoObj.amount = element.amount;
+                                        txInfoObj.memo = element.memo;
+
+                                        txInfoArr.push(txInfoObj);
+    
+                                        //
+                                        totAmount = util.calNum(totAmount, '+', myAmount, tAccountInfo.decimal_point);
+                                        logger.debug('totAmount 1 : ' + totAmount);
+                                    }
+                                }
+                                else
+                                {
+                                    //
+                                    txInfoObj = new Object();
+
+                                    txInfoObj.dst_account = toAccountHexStr;
+                                    txInfoObj.amount = element.amount;
+                                    txInfoObj.memo = element.memo;
+
+                                    txInfoArr.push(txInfoObj);
+
+                                    //
+                                    totAmount = util.calNum(totAmount, '+', myAmount, tAccountInfo.decimal_point);
+                                    logger.debug('totAmount 2 : ' + totAmount);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                //
+                if (uToAccountInfoErr === true)
+                {
+                    // Error Code
+                    logger.error("None User Account Info");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
+                    break;
+                }
+                else if (blackListErr === true)
+                {
+                    // Error Code
+                    logger.error("User Account is on Black List");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_LOCK_TOKEN_WALLET.MSG}};
+                    break;
+                }
+                else if (fromToAccountErr === true)
+                {
+                    // Error Code
+                    logger.error("Error -  Check fromAccount & toAccount");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
+                    break;
+                }
+                else if (decimalPointErr === true)
+                {
+                    // Error Code
+                    logger.error("Error - Check Decimal Point");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_INVALID_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_INVALID_DATA.MSG}};
+                    break;
+                }
+
+                // Check Balance
+                logger.debug("fromAccount : " + fromAccount);
+                logger.debug("request.tAccountAction : " + request.tAccountAction);
+                let myBal = await dbNNHandler.getAccountBalanceByAccountNumAndAction(fromAccount, request.tAccountAction);
+                if (myBal !== define.ERR_CODE.ERROR)
+                {
+                    if (Number(myBal.balance) >= Number(totAmount))
+                    {
+                        //
+                    }
+                    else
+                    {
+                        // Error Code
+                        logger.error("Error -  totAmount");
+                        ret_msg =  { errorCode : define.ERR_MSG.ERR_TOKEN_BALANCE.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_TOKEN_BALANCE.MSG}};
+                        break;
+                    }
+                }
+                else
+                {
+                    // Error Code
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_TOKEN_INFO.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_TOKEN_INFO.MSG}};
+                    break;
+                }
+
+                //
+                let fromAccountHexStr = BigInt(fromAccount).toString(16);
+                let tokenAccountHexStr = BigInt(tokenAccount).toString(16);
+
+                logger.debug("fromAccountHexStr : " + fromAccountHexStr);
+                logger.debug("Number(request.tAccountAction) : " + Number(request.tAccountAction));
+                logger.debug("request.ownerPubkey : " + request.ownerPubkey);
+                logger.debug("request.ownerPrikey : " + request.ownerPrikey);
+                logger.debug("request.ownerPrikeyPw : " + request.ownerPrikeyPw);
+
+                let tcMultiTxToken = await contractProc.cMultiTxToken(createTm, fromAccountHexStr, tokenAccountHexStr, totAmount, txInfoArr, Number(request.tAccountAction), request.ownerPubkey, request.ownerPrikey, request.ownerPrikeyPw);
+
+                if (tcMultiTxToken === false)
+                {
+                    logger.error("Token Transfer Is Invalid");
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_CONTRACT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_CONTRACT.MSG}};
+                    break;
+                }
+
+                logger.debug("tcMultiTxToken : " + JSON.stringify(tcMultiTxToken));
+                // let contractJson = JSON.stringify(tcMultiTxToken);
+
+                // Verifying Signature
+                let verifyResult = cryptoUtil.verifySign(tcMultiTxToken.signed_pubkey, tcMultiTxToken);
+                logger.debug("verifyResult : " + verifyResult);
+
+                if (verifyResult === false)
+                {
+                    logger.error("Signature Is Invalid(Verify failed)");
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_VERIFY_SIG.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_VERIFY_SIG.MSG}};
+                    break;
+                }
+
+                //
+                let msg = tcMultiTxToken;
+
+                //////////////////////////////////////////////////////////////////
+                // KAFKA
+                // Get Kafka Info
+                let likeTopic = Number(subNetId).toString(16);
+                // logger.debug("likeTopic : " + likeTopic);
+        
+                let kafkaInfo = await dbISHandler.getKafkaInfoByLikeTopic(likeTopic);
+                if (!kafkaInfo.length)
+                {
+                    // Error Code
+                    logger.error("None Kafka List accourding to subNetId : " + subNetId);
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_KAFKA_LIST.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_KAFKA_LIST.MSG}};
+                    break;
+                }
+
+                let brokerList = kafkaInfo[0].broker_list;
+                let topicList = kafkaInfo[0].topic_list;
+
+                // Set Kafka Info
+                kafkaHandler.setMyKafkaInfo(brokerList, topicList);
+
+                //
+                kafkaHandler.setMySubNetId(subNetId);
+
+                // Send To Kafka
+                let sentMsg = await kafkaHandler.sendContractMsg(msg);
+                if (sentMsg === true)
+                {
+                    ret_msg = { errorCode : define.ERR_MSG.SUCCESS.CODE, contents : { res : true, msg : define.ERR_MSG.SUCCESS.MSG}};
+                }
+                else
+                {
+                    ret_msg = { errorCode : define.ERR_MSG.ERR_KAFKA_TX.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_KAFKA_TX.MSG}};
+                }
+            } while(0);
+        }
+    } catch (err) {
+        logger.error("Error - multiTxTokenProc");
+        logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
+    }
+
+    return (ret_msg);
+}
+
+//
 module.exports.createScProc = async (reqQuery) => {
     const request = reqQuery;
     let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
@@ -2033,6 +2548,9 @@ module.exports.createScProc = async (reqQuery) => {
 
             do
             {
+                //
+                const createTm = util.getDateMS().toString();
+
                 //
                 let apiPath;
                 let apiRes;
@@ -2105,7 +2623,7 @@ module.exports.createScProc = async (reqQuery) => {
                 }
 
                 //
-                let tcCreateSc = await contractProc.cCreateSc(Number(request.scAction), Number(request.actionTarget), request.sc, request.ownerPubkey, request.ownerPrikey, request.ownerPrikeyPw);
+                let tcCreateSc = await contractProc.cCreateSc(createTm, Number(request.scAction), Number(request.actionTarget), request.sc, request.ownerPubkey, request.ownerPrikey, request.ownerPrikeyPw);
 
                 if (tcCreateSc === false)
                 {
@@ -2205,9 +2723,13 @@ module.exports.txScProc = async (reqQuery) => {
             do
             {
                 //
+                const createTm = util.getDateMS().toString();
+                
+                //
                 let apiPath;
                 let apiRes;
                 let sc, toAccountId;
+                let fbSubNetId;
                 //
                 if (request.sc) {
                     if(!util.isJsonString(request.sc))
@@ -2280,11 +2802,12 @@ module.exports.txScProc = async (reqQuery) => {
                 }
 
                 // Check recent owner of sub_id
-                let chkRecentTx = await dbNNHandler.accountScActionAndSubId(request.scAction, request.subId);
+                // let chkRecentTx = await dbNNHandler.accountScActionAndSubId(request.scAction, request.subId);
+                let chkRecentTx = await dbNNHandler.getUserNftInfobyScActionSubId(request.fromAccount, request.scAction, request.subId);
                 logger.debug("chkRecentTx : " + JSON.stringify(chkRecentTx));
                 if(chkRecentTx.length && Number(request.fromAccount)) 
                 {
-                    logger.debug("NFT TX - USER to USER");
+                    logger.info("NFT TX - USER to USER");
                     apiPath = `/account/chk/info?accountNum=${request.fromAccount}`;
                     apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
 
@@ -2295,7 +2818,7 @@ module.exports.txScProc = async (reqQuery) => {
                         break;
                     }
 
-                    if (chkRecentTx[0].to_account_num != apiRes.contents.uAccountInfo.account_num) {
+                    if (chkRecentTx[0].owner_acc_num != apiRes.contents.uAccountInfo.account_num) {
                         logger.error(`${request.fromAccount} is NOT current owner of ${request.subId}`);
                         // Error Code
                         logger.error("Error -  Check SC Action");
@@ -2303,7 +2826,9 @@ module.exports.txScProc = async (reqQuery) => {
                         break;
                     }
 
-                    apiPath = `/account/chk/info?accountNum=${chkRecentTx[0].to_account_num}`;
+                    fbSubNetId = apiRes.contents.uAccountInfo.subnet_id;
+
+                    apiPath = `/account/chk/info?accountNum=${chkRecentTx[0].owner_acc_num}`;
                     apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
                     if (apiRes.errorCode) {
                         // Error Code
@@ -2324,7 +2849,7 @@ module.exports.txScProc = async (reqQuery) => {
                         sc = JSON.stringify(sc);
                     }
                 } else {
-                    logger.debug("NFT TX - MINTING");
+                    logger.info("NFT TX - MINTING");
                 }
 
                 //
@@ -2334,7 +2859,7 @@ module.exports.txScProc = async (reqQuery) => {
                 //
                 
                 // let tcTxSc = await contractProc.cTxSc(Number(request.scAction), request.sc, request.userPubkey, request.userPrikey, fromAccountHexStr, toAccountHexStr, request.userPrikeyPw);
-                let tcTxSc = await contractProc.cTxSc(Number(request.scAction), sc, request.userPubkey, request.userPrikey, fromAccountHexStr, toAccountHexStr, request.userPrikeyPw);
+                let tcTxSc = await contractProc.cTxSc(createTm, Number(request.scAction), sc, request.userPubkey, request.userPrikey, fromAccountHexStr, toAccountHexStr, request.userPrikeyPw);
 
                 if (tcTxSc === false)
                 {
@@ -2363,7 +2888,27 @@ module.exports.txScProc = async (reqQuery) => {
                 //////////////////////////////////////////////////////////////////
                 // KAFKA
                 // Get Kafka Info
-                apiPath = `/kafka/broker/list?all`;
+                // if (fbSubNetId)
+                if (!fbSubNetId)
+                // {
+                //     apiPath = `/kafka/broker/list?subNetId=${fbSubNetId}`;
+                // }
+                // else
+                {
+                    // get data from fb.repl_info
+                    let query_result = await dbFBHandler.getReplData();
+                    let fbSubNetIdHex = query_result[0].subnet_id;
+                    fbSubNetId = parseInt(fbSubNetIdHex, 16);
+                    logger.debug("fbSubNetId : " + fbSubNetId);
+                    
+                    logger.info("NFT MINTING - subNetId: " + fbSubNetId);
+                }
+
+                //////////////////////////////////////////////////////////////////
+                // KAFKA
+                // Get Kafka Info
+                // apiPath = `/kafka/broker/list?all`;
+                apiPath = `/kafka/broker/list?subNetId=${fbSubNetId}`;
                 logger.debug("KAFKA apiPath : " + apiPath);
                 apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
                 logger.debug("KAFKA apiRes : " + JSON.stringify(apiRes));
@@ -2509,7 +3054,7 @@ module.exports.mintScPostProc = async (req) => {
             recentPer = await dbNNHandler.getSumofAmount();
             for (let i = 0; i < recentPer.length; i++){
                 // if (recentPer[i].sum_amount < nodeList.TOTAL_PRICE) {
-                    logger.info('sum_amount[' + i + '] :' + recentPer[i].sum_amount);
+                    logger.debug('sum_amount[' + i + '] :' + recentPer[i].sum_amount);
                     if (nodeList.TOTAL_PRICE >= Number(request.amount) + recentPer[i].sum_amount) {
                         scAction = recentPer[i].sc_action;
                         break;
@@ -2593,7 +3138,9 @@ module.exports.mintScPostProc = async (req) => {
                 let scActionKey = 'scAction', scKey = 'sc', fAccountKey = 'fromAccount', tAccountKey = 'toAccount', subIdKey = 'subId';
 
                 let postData = `${scActionKey}=${scAction}&${scKey}=${JSON.stringify(sc)}&${tokenPrikey}=${tokenPrikeyEnc}&${tokenPrikeyPw}=${tokenPrikeyPwEnc}&${tokenPubkey}=${tokenPubkeyEnc}&${fAccountKey}=0&${tAccountKey}=${toAccount}&${subIdKey}=${subId}`;
-
+                
+                // process.send({ cmd: define.CMD_DEFINE.TX_SC, data: postData });
+                
                 apiRes = await webApi.APICallProc(apiRoutePath, config.NFT_CONFIG, webApi.WEBAPI_DEFINE.METHOD.POST, postData);
                 
                 logger.debug("apiRes: " + JSON.stringify(apiRes));

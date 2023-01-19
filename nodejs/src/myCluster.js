@@ -12,7 +12,7 @@ const config = require("./../config/config.js");
 const contractProc = require("./contract/contractProc.js");
 
 // const cryptoUtil = require("./sec/cryptoUtil.js");
-const cli = require("./cli/cli.js");
+// const cli = require("./cli/cli.js");
 const util = require("./utils/commonUtil.js");
 const timer = require("./utils/timer.js");
 const logger = require("./utils/winlog.js");
@@ -182,7 +182,7 @@ module.exports.clusterInit = async () => {
         //
         logger.info("[W] " + cluster.worker.id + "'s Worker start");
 
-        cli.cliCallback();
+        // cli.cliCallback();
     } 
     else if ((define.CLUSTER_DEFINE.API_CLUSTER_WORKER_NUM < define.CLUSTER_DEFINE.NODE_NFT_CLUSTER_WORKER_ID) && 
             (define.CLUSTER_DEFINE.NODE_NFT_CLUSTER_WORKER_ID <= this.MAX_CLUSTER_WORKER_NUM) &&

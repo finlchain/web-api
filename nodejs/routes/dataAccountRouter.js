@@ -8,6 +8,7 @@ router.post("/balance", controller.getBalance);
 // GET
 router.get("/marketsupply", controller.getMarketSupply);
 router.get("/trade/day", controller.getTradePerDay);
+router.get("/trade/supply", controller.getTradeSupply);
 
 router.get("/richlist", controller.getRichList);
 

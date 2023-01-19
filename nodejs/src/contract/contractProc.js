@@ -60,7 +60,7 @@ module.exports.mintScTimerProc = async () => {
 ////////////////////////////////////////////////////////
 
 // 
-module.exports.cAddUser = async (ownerPubKey, superPubKey, accountId, ownerPrikey, seed) => {
+module.exports.cAddUser = async (createTm, ownerPubKey, superPubKey, accountId, ownerPrikey, seed) => {
     logger.debug("func - cAddUser");
 
     // Owner Public Key
@@ -77,7 +77,7 @@ module.exports.cAddUser = async (ownerPubKey, superPubKey, accountId, ownerPrike
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -102,7 +102,7 @@ module.exports.cAddUser = async (ownerPubKey, superPubKey, accountId, ownerPrike
 }
 
 // 
-module.exports.cChangeUserPk = async (accountNum, ownerPubKey, superPubKey, accountId, regSuperPubkey, regSuperPrikey, seed) => {
+module.exports.cChangeUserPk = async (createTm, accountNum, ownerPubKey, superPubKey, accountId, regSuperPubkey, regSuperPrikey, seed) => {
     logger.debug("func - cChangeUserPk");
 
     // Owner Public Key
@@ -125,7 +125,7 @@ module.exports.cChangeUserPk = async (accountNum, ownerPubKey, superPubKey, acco
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -150,7 +150,7 @@ module.exports.cChangeUserPk = async (accountNum, ownerPubKey, superPubKey, acco
 }
 
 // 
-module.exports.cCreateToken = async (ownerPubKey, superPubKey, ownerPrikey, seed, tokenAction, tokenName, tokenSymbol, totalSupply, decimalPoint) => {
+module.exports.cCreateToken = async (createTm, ownerPubKey, superPubKey, ownerPrikey, seed, tokenAction, tokenName, tokenSymbol, totalSupply, decimalPoint) => {
     logger.debug("func - cCreateToken");
 
     // Owner Public Key
@@ -168,7 +168,7 @@ module.exports.cCreateToken = async (ownerPubKey, superPubKey, ownerPrikey, seed
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -202,7 +202,7 @@ module.exports.cCreateToken = async (ownerPubKey, superPubKey, ownerPrikey, seed
 }
 
 // 
-module.exports.cChangeTokenPk = async (accountNum, ownerPubkey, superPubkey, tokenAction, regSuperPubkey, regSuperPrikey, seed) => {
+module.exports.cChangeTokenPk = async (createTm, accountNum, ownerPubkey, superPubkey, tokenAction, regSuperPubkey, regSuperPrikey, seed) => {
     logger.debug("func - cChangeTokenPk");
 
     // Owner Public Key
@@ -225,7 +225,7 @@ module.exports.cChangeTokenPk = async (accountNum, ownerPubkey, superPubkey, tok
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -250,7 +250,7 @@ module.exports.cChangeTokenPk = async (accountNum, ownerPubkey, superPubkey, tok
 }
 
 // 
-module.exports.cChangeTokenLockTx = async (accountNum, tokenAction, lockTx, regSuperPubkey, regSuperPrikey, seed) => {
+module.exports.cChangeTokenLockTx = async (createTm, accountNum, tokenAction, lockTx, regSuperPubkey, regSuperPrikey, seed) => {
     logger.debug("func - cChangeTokenLockTx");
 
     // Registered Super Public Key
@@ -261,7 +261,7 @@ module.exports.cChangeTokenLockTx = async (accountNum, tokenAction, lockTx, regS
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -285,7 +285,7 @@ module.exports.cChangeTokenLockTx = async (accountNum, tokenAction, lockTx, regS
 }
 
 // 
-module.exports.cChangeTokenLockTime = async (accountNum, tokenAction, lockTimeFrom, lockTimeTo, regSuperPubkey, regSuperPrikey, seed) => {
+module.exports.cChangeTokenLockTime = async (createTm, accountNum, tokenAction, lockTimeFrom, lockTimeTo, regSuperPubkey, regSuperPrikey, seed) => {
     logger.debug("func - cChangeTokenLockTx");
 
     // Registered Super Public Key
@@ -296,7 +296,7 @@ module.exports.cChangeTokenLockTime = async (accountNum, tokenAction, lockTimeFr
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -321,7 +321,7 @@ module.exports.cChangeTokenLockTime = async (accountNum, tokenAction, lockTimeFr
 }
 
 // 
-module.exports.cChangeTokenLockWallet = async (accountNum, tokenAction, blackPubkeyList, whitePubkeyList, regSuperPubkey, regSuperPrikey, seed) => {
+module.exports.cChangeTokenLockWallet = async (createTm, accountNum, tokenAction, blackPubkeyList, whitePubkeyList, regSuperPubkey, regSuperPrikey, seed) => {
     logger.debug("func - cChangeTokenLockTx");
 
     // Registered Super Public Key
@@ -332,7 +332,7 @@ module.exports.cChangeTokenLockWallet = async (accountNum, tokenAction, blackPub
     
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -358,7 +358,7 @@ module.exports.cChangeTokenLockWallet = async (accountNum, tokenAction, blackPub
 }
 
 // 
-module.exports.cTxToken = async (fromAccount, toAccount, tokenAction, amount, ownerPubkey, ownerPrikey, seed) => {
+module.exports.cTxToken = async (createTm, fromAccount, toAccount, tokenAction, amount, ownerPubkey, ownerPrikey, seed) => {
     logger.debug("func - cTxToken");
 
     // Owner Public Key
@@ -375,7 +375,7 @@ module.exports.cTxToken = async (fromAccount, toAccount, tokenAction, amount, ow
         logger.debug("SECURITY_TOKEN");
 
         contractJson = {
-            create_tm : util.getDateMS().toString(),
+            create_tm : createTm,
             fintech : C_DEFINE.FINTECH.FINANCIAL_TX,
             privacy : C_DEFINE.PRIVACY.PUBLIC,
             fee : C_DEFINE.FEE_DEFAULT,
@@ -400,7 +400,7 @@ module.exports.cTxToken = async (fromAccount, toAccount, tokenAction, amount, ow
         logger.debug("tokenAction : " + tokenAction + ", tokenAccount : " + tokenAccount);
 
         contractJson = {
-            create_tm : util.getDateMS().toString(),
+            create_tm : createTm,
             fintech : C_DEFINE.FINTECH.FINANCIAL_TX,
             privacy : C_DEFINE.PRIVACY.PUBLIC,
             fee : C_DEFINE.FEE_DEFAULT,
@@ -425,7 +425,7 @@ module.exports.cTxToken = async (fromAccount, toAccount, tokenAction, amount, ow
 }
 
 // 
-module.exports.cTxToken2 = async (fromAccount, toAccount, tokenAccount, tokenAction, amount, ownerPubkey, ownerPrikey, seed) => {
+module.exports.cTxToken2 = async (createTm, fromAccount, toAccount, tokenAccount, tokenAction, amount, ownerPubkey, ownerPrikey, seed) => {
     logger.debug("func - cTxToken");
 
     // Owner Public Key
@@ -442,7 +442,7 @@ module.exports.cTxToken2 = async (fromAccount, toAccount, tokenAccount, tokenAct
         logger.debug("SECURITY_TOKEN");
 
         contractJson = {
-            create_tm : util.getDateMS().toString(),
+            create_tm : createTm,
             fintech : C_DEFINE.FINTECH.FINANCIAL_TX,
             privacy : C_DEFINE.PRIVACY.PUBLIC,
             fee : C_DEFINE.FEE_DEFAULT,
@@ -468,7 +468,7 @@ module.exports.cTxToken2 = async (fromAccount, toAccount, tokenAccount, tokenAct
         // logger.debug("tokenAction : " + tokenAction + ", tokenAccount : " + tokenAccount);
 
         contractJson = {
-            create_tm : util.getDateMS().toString(),
+            create_tm : createTm,
             fintech : C_DEFINE.FINTECH.FINANCIAL_TX,
             privacy : C_DEFINE.PRIVACY.PUBLIC,
             fee : C_DEFINE.FEE_DEFAULT,
@@ -494,7 +494,46 @@ module.exports.cTxToken2 = async (fromAccount, toAccount, tokenAccount, tokenAct
 }
 
 // 
-module.exports.cCreateSc = async (scAction, actionTarget, sc, ownerPubkey, ownerPrikey, seed) => {
+module.exports.cMultiTxToken = async (createTm, fromAccount, tokenAccount, totAmount, txInfoArr, tokenAction, ownerPubkey, ownerPrikey, seed) => {
+    logger.debug("func - cMultiTxToken");
+
+    // Owner Public Key
+    if (ownerPubkey.length !== define.SEC_DEFINE.PUBLIC_KEY_LEN)
+    {
+        return false;
+    }
+
+    //
+    let contractJson;
+
+    contractJson = {
+        create_tm : createTm,
+        fintech : C_DEFINE.FINTECH.FINANCIAL_TX,
+        privacy : C_DEFINE.PRIVACY.PUBLIC,
+        fee : C_DEFINE.FEE_DEFAULT,
+        from_account : fromAccount,
+        to_account : C_DEFINE.TO_DEFAULT,
+        action : define.CONTRACT_DEFINE.ACTIONS.CONTRACT.DEFAULT.TOKEN_TX,
+        contents : {
+            action : tokenAction,
+            token_account : tokenAccount,
+            total_amount : totAmount,
+            tx_info : JSON.stringify(txInfoArr)
+        },
+        memo : ""
+    };
+
+    //
+    let sig = cryptoUtil.genSignNoFile(JSON.parse(JSON.stringify(contractJson)), seed, ownerPrikey);
+    contractJson.sig = sig;
+
+    contractJson.signed_pubkey = ownerPubkey;
+
+    return contractJson;
+}
+
+// 
+module.exports.cCreateSc = async (createTm, scAction, actionTarget, sc, ownerPubkey, ownerPrikey, seed) => {
     logger.debug("func - cCreateSc");
 
     // Owner Public Key
@@ -505,7 +544,7 @@ module.exports.cCreateSc = async (scAction, actionTarget, sc, ownerPubkey, owner
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,
@@ -530,7 +569,7 @@ module.exports.cCreateSc = async (scAction, actionTarget, sc, ownerPubkey, owner
 }
 
 // 
-module.exports.cTxSc = async (scAction, sc, userPubkey, userPrikey, fromAccount, toAccount, seed) => {
+module.exports.cTxSc = async (createTm, scAction, sc, userPubkey, userPrikey, fromAccount, toAccount, seed) => {
     logger.debug("func - cTxSc");
 
     // User Public Key
@@ -545,7 +584,7 @@ module.exports.cTxSc = async (scAction, sc, userPubkey, userPrikey, fromAccount,
 
     //
     let contractJson = {
-        create_tm : util.getDateMS().toString(),
+        create_tm : createTm,
         fintech : C_DEFINE.FINTECH.NON_FINANCIAL_TX,
         privacy : C_DEFINE.PRIVACY.PUBLIC,
         fee : C_DEFINE.FEE_DEFAULT,

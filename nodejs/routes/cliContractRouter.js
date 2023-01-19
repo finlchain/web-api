@@ -22,6 +22,7 @@ router.post("/token/change/lock/Time", controller.changeTokenLockTime);
 router.post("/token/change/lock/Wallet", controller.changeTokenLockWallet);
 
 router.post("/token/tx", controller.txToken);
+router.post("/token/multiTx", controller.multiTxToken);
 
 router.post("/create/token", controller.createToken); // deprecated
 router.post("/change/token/pubkey", controller.changeTokenPubkey); // deprecated

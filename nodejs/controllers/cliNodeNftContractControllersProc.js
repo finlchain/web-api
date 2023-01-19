@@ -114,6 +114,13 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
     logger.debug("func : chkWalletInfoProc 1 for TGC");
 
     try {
+        logger.debug("apiKey : " + request.apiKey);
+        logger.debug("ts : " + request.ts);
+        logger.debug("version : " + request.version);
+        logger.debug("signature : " + request.signature);
+        logger.debug("requester : " + request.requester);
+        logger.debug("wName : " + request.wName);
+
         if (request.hasOwnProperty("apiKey") && 
             request.hasOwnProperty("ts") && 
             request.hasOwnProperty("version") &&
@@ -122,13 +129,6 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
             request.hasOwnProperty("wName") &&
             request.wName.length)
         {
-            logger.debug("apiKey : " + request.apiKey);
-            logger.debug("ts : " + request.ts);
-            logger.debug("version : " + request.version);
-            logger.debug("signature : " + request.signature);
-            logger.debug("requester : " + request.requester);
-            logger.debug("wName : " + request.wName);
-
             do
             {
                 //
@@ -137,7 +137,7 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
 
                 // check api client is valid
                 let isValid = await this.chkClientInfo(request.apiKey, request.ts, request.version, request.signature, request.requester);
-                logger.debug("🚀 ~ module.exports.chkWalletInfoProc ~ isValid" + isValid)
+                logger.debug("chkWalletInfoProc ~ isValid" + isValid.errorCode)
 
                 if (!isValid.errorCode) {
                     
@@ -154,7 +154,7 @@ module.exports.chkWalletInfoProc = async (reqQuery) => {
                         }
                     } else {
                         // Error Code
-                        logger.error("Error -  Check Wallet Name 2");
+                        logger.error("Error -  Check Wallet Name 1");
                         ret_msg =  { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : `Wallet : ${request.wName} is NOT registered.`}};
                         break;
                     }
@@ -181,6 +181,17 @@ module.exports.txMintNodeProc = async (reqQuery) => {
     logger.debug("func : txMintNodeProc for TGC");
 
     try {
+        logger.debug("apiKey : " + request.apiKey);
+        logger.debug("timestamp : " + request.ts);
+        logger.debug("version : " + request.version);
+        logger.debug("signature : " + request.signature);
+        logger.debug("requester : " + request.requester);
+        logger.debug("nCurrency : " + request.nCurrency);
+        logger.debug("nPrice : " + request.nPrice);
+        logger.debug("pNum : " + request.pNum);
+        logger.debug("wName : " + request.wName);
+        logger.debug("pSiteId : " + request.pSiteId);
+
         if (request.hasOwnProperty("apiKey") && 
             request.hasOwnProperty("ts") && 
             request.hasOwnProperty("version") &&
@@ -197,17 +208,6 @@ module.exports.txMintNodeProc = async (reqQuery) => {
             Number(request.nPrice) > 0 &&
             request.pSiteId.length)
         {
-            logger.debug("apiKey : " + request.apiKey);
-            logger.debug("timestamp : " + request.ts);
-            logger.debug("version : " + request.version);
-            logger.debug("signature : " + request.signature);
-            logger.debug("requester : " + request.requester);
-            logger.debug("nCurrency : " + request.nCurrency);
-            logger.debug("nPrice : " + request.nPrice);
-            logger.debug("pNum : " + request.pNum);
-            logger.debug("wName : " + request.wName);
-            logger.debug("pSiteId : " + request.pSiteId);
-
             do
             {
                 //
@@ -217,7 +217,7 @@ module.exports.txMintNodeProc = async (reqQuery) => {
 
                 // check api client is valid
                 let isValid = await this.chkClientInfo(request.apiKey, request.ts, request.version, request.signature, request.requester);
-                logger.debug("module.exports.txMintNodeProc= ~ isValid", isValid)
+                logger.debug("module.exports.txMintNodeProc= ~ isValid", isValid.errorCode)
 
                 if (!isValid.errorCode) {
 
@@ -307,6 +307,13 @@ module.exports.chkUserNFTProc = async (reqQuery) => {
     logger.debug("func : chkUserNFTProc for TGC");
 
     try {
+        logger.debug("apiKey : " + request.apiKey);
+        logger.debug("ts : " + request.ts);
+        logger.debug("version : " + request.version);
+        logger.debug("signature : " + request.signature);
+        logger.debug("requester : " + request.requester);
+        logger.debug("wName : " + request.wName);
+        
         if (request.hasOwnProperty("apiKey") && 
             request.hasOwnProperty("ts") && 
             request.hasOwnProperty("version") &&
@@ -315,13 +322,6 @@ module.exports.chkUserNFTProc = async (reqQuery) => {
             request.hasOwnProperty("wName") &&
             request.wName.length)
         {
-            logger.debug("apiKey : " + request.apiKey);
-            logger.debug("ts : " + request.ts);
-            logger.debug("version : " + request.version);
-            logger.debug("signature : " + request.signature);
-            logger.debug("requester : " + request.requester);
-            logger.debug("wName : " + request.wName);
-
             do
             {
                 //
@@ -436,271 +436,6 @@ module.exports.chkUserNFTProc = async (reqQuery) => {
         }
     } catch (err) {
         logger.error("Error - chkUserNFTProc");
-        logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
-    }
-
-    return (ret_msg);
-}
-
-module.exports.refundNftProc = async (reqBody) => {
-    const request = reqBody;
-    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
-
-    logger.debug("func : refundNftProc");
-    logger.debug("reqBody " + JSON.stringify(request));
-    logger.debug("reqBody " + request);
-    try {
-        if (request.hasOwnProperty("nId") && 
-            request.hasOwnProperty("nNftId") &&
-            request.hasOwnProperty("userPrikey") &&
-            request.hasOwnProperty("userPrikeyPw") && 
-            request.hasOwnProperty("userPubkey") &&
-            request.hasOwnProperty("verificationNum") &&
-            request.hasOwnProperty("fromAccount") &&
-            request.fromAccount.length)
-        {
-            logger.debug("nId : " + request.nId);
-            logger.debug("nNftId : " + request.nNftId);
-            logger.debug("userPrikey : " + request.userPrikey);
-            logger.debug("userPrikeyPw : " + request.userPrikeyPw);
-            logger.debug("userPubkey : " + request.userPubkey);
-            logger.debug("fromAccount : " + request.fromAccount);
-            logger.debug("verificationNum : " + request.verificationNum);
-
-            do
-            {
-                //
-                let apiPath;
-                let apiRes;
-                let fromAccountNum;
-                let toAccount;
-                let scAction;
-
-                // Check fromAccount
-                let userInfo = await dbNNHandler.getUserAccountByAccountId(request.fromAccount);
-                if (userInfo !== false) {
-                    fromAccountNum = userInfo.account_num;
-                    logger.debug("fromAccount acc_num: " + fromAccountNum);
-                } else {
-                    ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
-                    break;
-                }
-
-                // Check scAction
-                let nodeList = define.NODE_LIST;
-                
-                
-                let nodeName = (request.nId).toUpperCase();
-                logger.debug("nodeName: " + nodeName);
-
-                scAction = nodeList[`${nodeName}`].sc_action;
-                toAccount = nodeList[`${nodeName}`].walletAcc;
-                
-                // check meta_data;
-                let data = await dbNNHandler.getNftMetaData(scAction, request.nNftId, fromAccountNum);
-                let meta_data = data.meta_data;
-
-                logger.debug("meta_data: " + meta_data);
-
-                // FIXME: Check refundId
-                let xaPrikeyPath = './key/fc_x_privkey.pem';
-                let xbPubkeyPath = './key/tgc_x_pubkey.pem'
-                let xaPrikeyFile = await fs.readFileSync(xaPrikeyPath, 'binary');
-                let xbPubkeyFile = await fs.readFileSync(xbPubkeyPath, 'binary');
-
-                let sharedKey1 = cryptoApi.generateX25519PemSKey(xaPrikeyFile, xbPubkeyFile);
-
-                let keyHex1 = sharedKey1.slice(32);
-
-                let sig1 = cryptoApi.generateSignature(keyHex1, meta_data);
-                logger.debug("sig1: " + sig1);
-
-                if (sig1 !== request.verificationNum) {
-
-                    ret_msg = { errorCode : define.ERR_MSG.ERR_REFUND_ID.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REFUND_ID.MSG}};
-                    break;
-                }
-
-                logger.debug("scAction: " + scAction);
-                logger.debug("toAccount: " + toAccount);
-                if (scAction && toAccount) {
-
-                    let apiRoutePath = '/contract/sc/tx';
-
-                    let txKey1 = 'userPrikey';
-                    let txKey2 = 'userPrikeyPw';
-                    let txKey3 = 'userPubkey';
-                    let txVal1 = encodeURIComponent(request.userPrikey);
-                    let txVal2 = encodeURIComponent(request.userPrikeyPw);
-                    let txVal3 = encodeURIComponent(request.userPubkey);
-                    let scActionKey = 'scAction', fAccountKey = 'fromAccount', tAccountKey = 'toAccount', subIdKey = 'subId';
-
-                    let postData = `${scActionKey}=${scAction}&${txKey1}=${txVal1}&${txKey2}=${txVal2}&${txKey3}=${txVal3}&${fAccountKey}=${fromAccountNum}&${tAccountKey}=${toAccount}&${subIdKey}=${request.nNftId}`;
-                    logger.debug("postData: " + postData);
-                    apiRes = await webApi.APICallProc(apiRoutePath, config.NFT_CONFIG, webApi.WEBAPI_DEFINE.METHOD.POST, postData);
-                        
-                    logger.debug("apiRes: " + JSON.stringify(apiRes));
-                    ret_msg = apiRes;
-                } else {
-                    break;
-                }
-            } while(0);
-        } else {
-            ret_msg = { errorCode : define.ERR_MSG.ERR_REQ_PARAMS.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_REQ_PARAMS.MSG}};
-        }
-    } catch (err) {
-        logger.error("Error - refundNftProc");
-        logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
-    }
-
-    return (ret_msg);
-}
-
-module.exports.txNftProc = async (reqBody) => {
-    const request = reqBody;
-    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
-
-    logger.debug("func : txNftProc");
-
-    try {
-        if (request.hasOwnProperty("nId") && 
-            request.hasOwnProperty("nNftId") &&
-            request.hasOwnProperty("userPrikey") &&
-            request.hasOwnProperty("userPrikeyPw") && 
-            request.hasOwnProperty("userPubkey") &&
-            request.hasOwnProperty("toAccount") &&
-            request.hasOwnProperty("fromAccount"))
-        {
-            logger.debug("nId : " + request.nId);
-            logger.debug("nNftId : " + request.nNftId);
-            logger.debug("userPrikey : " + request.userPrikey);
-            logger.debug("userPrikeyPw : " + request.userPrikeyPw);
-            logger.debug("userPubkey : " + request.userPubkey);
-            logger.debug("toAccount : " + request.toAccount);
-            logger.debug("fromAccount : " + request.fromAccount);
-
-            do
-            {
-                //
-                let apiPath;
-                let apiRes;
-                let recentPer;
-                let toAccount;
-                let scAction;
-
-                // Check fromAccount
-                let userInfo = await dbNNHandler.getUserAccountByAccountId(request.fromAccount);
-                if (userInfo !== false) {
-                    toAccount = userInfo.account_num;
-                    logger.debug("toAccount acc_num: " + toAccount);
-                } else {
-                    ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
-                    break;
-                }
-
-                // FIXME: Check toAccount
-                userInfo = await dbNNHandler.getUserAccountByAccountId(request.fromAccount);
-                if (userInfo !== false) {
-                    toAccount = userInfo.account_num;
-                    logger.debug("toAccount acc_num: " + toAccount);
-                } else {
-                    ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
-                    break;
-                }
-
-                // Check scAction
-                let nodeList = define.NODE_LIST;
-                if (request.hasOwnProperty("nodeName")) {
-
-                    let nodeName = (request.nodeName).toUpperCase();
-                    
-                    let node_sc = nodeList[`${nodeName}`].sc_action;
-                    
-                    // recentPer = await dbNNHandler.getSumofRatioScAction(request.scAction);
-                    recentPer = await dbNNHandler.getSumofAmountScAction(node_sc);
-                    scAction = recentPer.sc_action;
-                    if (recentPer.sum_amount < nodeList.TOTAL_PRICE) {
-                        if (nodeList.TOTAL_PRICE < Number(request.amount) + recentPer.sum_amount) {
-                            //ERROR CODE
-                            ret_msg = { errorCode : define.ERR_MSG.ERR_AMOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_AMOUNT.MSG}};
-                            break;
-                        }
-                    } else {
-                        //ERROR CODE
-                        logger.error("unavailable to buy: " + request.scAction);
-                        ret_msg = { errorCode : define.ERR_MSG.ERR_SOLD_OUT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_SOLD_OUT.MSG}};
-                        break;
-                    }
-                }
-
-                logger.debug("scAction: " + scAction);
-                logger.debug("toAccount: " + toAccount);
-                
-
-                if (scAction && toAccount) {
-                    let subId = await dbNNHandler.getMintSubId(scAction);
-                    logger.debug("subId: " + subId);
-
-                    let ratioCal = request.amount / define.NODE_LIST.TOTAL_PRICE * 100;
-                    if (subId) {
-                        let sc = {
-                            sub_id: subId,
-                            owner: request.toAccount,
-                            pNum: request.pNum,
-                            meta_data: {
-                                pNum: request.pNum,
-                                ratio: ratioCal,
-                                amount: request.amount
-                            }
-                        }
-                        // ret_msg = {
-                        //     errorCode : define.ERR_MSG.SUCCESS.CODE,
-                        //     contents : {
-                        //         timestamp: Date.now(),
-                        //         fromAccount: 0,
-                        //         toAccount: toAccount,
-                        //         scAction: scAction,
-                        //         subId: subId,
-                        //         sc: JSON.stringify(sc)
-                        //     }
-                        // }
-
-                        let apiRoutePath = '/contract/sc/tx';
-                        let dir = nodeList.KEY_DIR;
-                        // let tkeyStoreJson = fs.readFile(dir, "binary", (err, data) => {
-                        //     if(err) {
-                        //         console.log(err);
-                        //     }
-                        //     console.log(data);
-                        // });
-
-                        let tkeyStoreJson = await fs.readFileSync(dir, 'binary');
-                        let tkeyStore = JSON.parse(tkeyStoreJson);
-                        let tokenPrikey = 'userPrikey';
-                        let tokenPrikeyVal = tkeyStore.edPrikeyFin;
-                        let tokenPrikeyPw = 'userPrikeyPw';
-                        let tokenPrikeyPwVal = process.env.UTIL_TKN_PW;
-                        let tokenPubkey = 'userPubkey';
-                        let tokenPubkeyVal = define.CONTRACT_DEFINE.ED_PUB_IDX + await cryptoUtil.getPubkeyNoFile(tkeyStore.edPubkeyPem);
-                        let tokenPrikeyEnc = encodeURIComponent(tokenPrikeyVal);
-                        let tokenPrikeyPwEnc = encodeURIComponent(tokenPrikeyPwVal);
-                        let tokenPubkeyEnc = encodeURIComponent(tokenPubkeyVal);
-                        let scActionKey = 'scAction', scKey = 'sc', fAccountKey = 'fromAccount', tAccountKey = 'toAccount', subIdKey = 'subId';
-
-                        let postData = `${scActionKey}=${scAction}&${scKey}=${JSON.stringify(sc)}&${tokenPrikey}=${tokenPrikeyEnc}&${tokenPrikeyPw}=${tokenPrikeyPwEnc}&${tokenPubkey}=${tokenPubkeyEnc}&${fAccountKey}=0&${tAccountKey}=${toAccount}&${subIdKey}=${subId}`;
-                        
-                        apiRes = await webApi.APICallProc(apiRoutePath, config.FBN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.POST, postData);
-                        
-                        logger.debug("apiRes: " + JSON.stringify(apiRes));
-                        ret_msg = apiRes;
-                    }
-                } else {
-                    break;
-                }
-            } while(0);
-        }
-    } catch (err) {
-        logger.error("Error - txNftProc");
         logger.debug("ret_msg_p : " + JSON.stringify(ret_msg));
     }
 

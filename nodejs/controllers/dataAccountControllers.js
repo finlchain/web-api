@@ -65,6 +65,24 @@ module.exports.getBalance = async (req, res) => {
 // GET
 
 //
+module.exports.getTradeSupply = async (req, res) => {
+    const request = req.query;
+    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
+
+    logger.debug("func : getTradeSupply");
+
+    if (request.hasOwnProperty("total"))
+    {
+        ret_msg = "1200000000.000000000";
+    }
+    
+    if (request.hasOwnProperty("circulating")) {
+        ret_msg = "292431269.000000000";
+    }
+
+    res.send(ret_msg);
+}
+
 module.exports.getMarketSupply = async (req, res) => {
     const request = req.query;
     let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
@@ -665,7 +683,7 @@ module.exports.getAccountHistory = async (req, res) => {
             }
         } while (0);
     } catch (err) {
-        logger.error("Error - 44");
+        logger.error("Error - getAccountHistory");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -1197,7 +1215,7 @@ module.exports.chkAccountInfo = async (req, res) => {
             }
         }
     } catch (err) {
-        logger.error("Error - 45");
+        logger.error("Error - chkAccountInfo");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -1230,7 +1248,7 @@ module.exports.chkAccountCnt = async (req, res) => {
             }
         }
     } catch (err) {
-        logger.error("Error - 46");
+        logger.error("Error - chkAccountCnt");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -1279,10 +1297,76 @@ module.exports.chkNftInfo = async (req, res) => {
                     if (request.subId == 0) {
                         res.send(ret_msg);
                     }
-                    let subIdInfo = await dbNNHandler.getSubIdDetail(request.scAction, request.subId);
-                    let ScInfo = await dbNNHandler.getSubIdSc(request.scAction);
-                    let subIdTxCnt = await dbNNHandler.getSubIdTxCnt(request.scAction, request.subId);
-                    let subIdTxList = await dbNNHandler.getSubIdTx(request.scAction, request.subId);
+                    let scAction = request.scAction;
+                    let subId = request.subId;
+                    
+                    if (isNaN(Number(scAction))) {
+                        const nodeList = define.NODE_LIST;
+                        let nodeName = scAction.toUpperCase();
+                        logger.debug("nodeName: " + nodeName);
+        
+                        scAction = nodeList[`${nodeName}`].sc_action;
+                        logger.debug("scAction: " + scAction);
+                        subId = util.hexStrToInt(subId);
+                        logger.debug("subId hex - " + subId)
+                    }
+
+                    let ScInfo = await dbNNHandler.getSubIdSc(scAction);
+
+                    if (request.hasOwnProperty("fromAccount")) {
+                        logger.debug("fromAccount: " + request.fromAccount)
+                        logger.debug("scAction: " + scAction)
+                        logger.debug("subId: " + subId)
+                        let chkRecentTx = await dbNNHandler.getUserNftInfobyScActionSubId(request.fromAccount, scAction, subId);
+                        
+                        logger.debug("dataAccountController/chkRecentTx : " + JSON.stringify(chkRecentTx));
+                        if (chkRecentTx.length && Number(request.fromAccount)) {
+                            apiPath = `/account/chk/info?accountNum=${request.fromAccount}`;
+                            apiRes = await webApi.APICallProc(apiPath, config.FBNIN_CONFIG, webApi.WEBAPI_DEFINE.METHOD.GET);
+        
+                            if (apiRes.errorCode) {
+                                // Error Code
+                                logger.error("Error -  Check from Account");
+                                ret_msg = { errorCode: define.ERR_MSG.ERR_ACCOUNT.CODE, contents: { res: false, msg: define.ERR_MSG.ERR_ACCOUNT.MSG } };
+                                break;
+                            }
+        
+                            if (chkRecentTx[0].owner_acc_num != apiRes.contents.uAccountInfo.account_num) {
+                                logger.error(`1 ${request.fromAccount} is NOT current owner of ${request.subId}`);
+                                // Error Code
+                                ret_msg = { errorCode: define.ERR_MSG.ERR_NFT_TX.CODE, contents: { res: false, msg: define.ERR_MSG.ERR_NFT_TX.MSG } };
+                                break;
+                            }
+
+                            let recentSubIdInfo = chkRecentTx[0];
+                            let subIdTx = await dbNNHandler.getSubIdTx(scAction, subId, request.fromAccount);
+
+                            recentSubIdInfo.sc_hash = subIdTx[0].sc_hash;
+
+                            ret_msg = {
+                                errorCode : define.ERR_MSG.SUCCESS.CODE,
+                                contents : {
+                                    timestamp: Date.now(),
+                                    node: ScInfo,
+                                    NFT: recentSubIdInfo,
+                                    tx_list: subIdTx
+                                }
+                            }
+
+                            break;
+
+                        } else {
+                            logger.error(`2 ${request.fromAccount} is NOT current owner of ${subId}`);
+                            // Error Code
+                            ret_msg = { errorCode: define.ERR_MSG.ERR_NFT_TX.CODE, contents: { res: false, msg: define.ERR_MSG.ERR_NFT_TX.MSG } };
+                            break;
+                        }
+                    }
+
+                    let subIdInfo = await dbNNHandler.getSubIdDetail(scAction, subId);
+                    let subIdTxCnt = await dbNNHandler.getSubIdTxCnt(scAction, subId);
+                    let subIdTxList = await dbNNHandler.getSubIdTx(scAction, subId);
+
                     if (subIdInfo !== false)
                     {
                         logger.debug("subIdInfo");
@@ -1300,7 +1384,7 @@ module.exports.chkNftInfo = async (req, res) => {
                     }
                     else
                     {
-                        logger.debug("NFT scAction & subId : Error");
+                        logger.error("NFT scAction & subId : Error");
                     }
     
                 } else {
@@ -1320,7 +1404,7 @@ module.exports.chkNftInfo = async (req, res) => {
                     }
                     else
                     {
-                        logger.debug("NFT scAction : Error");
+                        logger.error("NFT scAction : Error");
                     }
                 }
             }
@@ -1345,7 +1429,7 @@ module.exports.chkNftInfo = async (req, res) => {
                 }
                 else
                 {
-                    logger.debug("NFT scDetail : Error");
+                    logger.error("NFT scDetail : Error");
                 }
             }
     
@@ -1369,11 +1453,10 @@ module.exports.chkNftInfo = async (req, res) => {
                 }
                 else
                 {
-                    logger.debug("NFT holders : Error");
+                    logger.error("NFT holders : Error");
                 }
             }
     
-            // for BE
             if (request.hasOwnProperty("user"))
             {
                 logger.debug("user : " + request.user);
@@ -1423,70 +1506,13 @@ module.exports.chkNftInfo = async (req, res) => {
                     else
                     {    
                         // res.send(ret_msg);
-                        logger.debug("NFT user Detail : Error");
+                        logger.debug("this account not owns any NFT");
                         ret_msg = { errorCode : define.ERR_MSG.ERR_NO_NFT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_NFT.MSG}};
                         break;
                     }
                 }
             }
     
-            // TODO: for users
-            if (request.hasOwnProperty("holder"))
-            {
-                logger.debug("user : " + request.holder);
-    
-                let user = request.holder;
-                let userInfo;
-    
-                if (isNaN(Number(holder))) {
-                    if (holder.length == define.SEC_DEFINE.PUBLIC_KEY_LEN) {
-                        userInfo = await dbNNHandler.getUserAccountByPubkey(holder);
-    
-                        if (userInfo !== false) {
-                            holder = userInfo.account_num;
-                            logger.error("user : " + holder);
-                        } else {
-                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
-                            break;
-                        }
-    
-                    } else {
-                        userInfo = await dbNNHandler.getUserAccountByAccountId(holder);
-    
-                        if (userInfo !== false) {
-                            holder = userInfo.account_num;
-                        } else {
-                            ret_msg = { errorCode : define.ERR_MSG.ERR_ACCOUNT.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_ACCOUNT.MSG}};
-                            break;
-                        }
-                    }
-                }
-    
-                if (Number(holder)) {
-                    let userNftInfo = await dbNNHandler.getUserNftInfo(holder);
-        
-                    if (userNftInfo !== false)
-                    {
-                        logger.debug("userNftInfo");
-            
-                        ret_msg = {
-                            errorCode : define.ERR_MSG.SUCCESS.CODE,
-                            contents : {
-                                timestamp: Date.now(),
-                                account_num: holder,
-                                NFT : userNftInfo
-                            }
-                        }
-                    }
-                    else
-                    {    
-                        // res.send(ret_msg);
-                        logger.debug("NFT holder Detail : Error");
-                        break;
-                    }
-                }
-            }
-
             if (request.hasOwnProperty("userTx"))
             {
                 logger.debug("userTx : " + request.userTx);
@@ -1537,10 +1563,37 @@ module.exports.chkNftInfo = async (req, res) => {
                     }
                 }
             }
+
+            if (request.hasOwnProperty("pNum")) // Not used
+            {
+                logger.debug("pNum : " + request.pNum);
+    
+                let pNum = request.pNum;
+                let scInfo = await dbNNHandler.getScDetailInfoByPNum(pNum);
+
+                if (scInfo) {
+                    
+                    ret_msg = {
+                        errorCode : define.ERR_MSG.SUCCESS.CODE,
+                        contents : {
+                            timestamp: Date.now(),
+                            sc_action: scInfo.sc_action,
+                            sub_id: scInfo.sub_id,
+                            sc: scInfo.sc
+                        }
+                    }
+
+                } else {
+                    // Error Code
+                    logger.error("Error -  Check pNum");
+                    ret_msg =  { errorCode : define.ERR_MSG.ERR_NO_NFT_2.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_NFT_2.MSG + `pNum : ${request.pNum}`}};
+                    break;
+                }
+            }
         } while (0);
         
     } catch (err) {
-        logger.error("Error - 47");
+        logger.error("Error - chkNftInfo");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));

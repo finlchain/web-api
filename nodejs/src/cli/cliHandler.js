@@ -17,6 +17,25 @@ module.exports.handler = async (cmd) => {
     {
         //
     }
+    else if(cmd.slice(0,13) === define.CMD.TEST_DUPL_ARR)
+    {
+        const arr = [{index: 1, toAccount: 'red'}, {index: 2, toAccount: 'green'}, {index: 3, toAccount: 'yellow'}, {index: 4, toAccount: 'green'}, {index: 5, toAccount: 'red'}];
+
+        let duplicates;
+
+        duplicates = util.findDuplArrByField(arr, 'toAccount');
+        logger.debug('duplicates.length :' + duplicates.length);
+        logger.debug(JSON.stringify(duplicates));
+
+        duplicates = util.delDuplArrByField(arr, 'toAccount');
+        logger.debug('duplicates.length :' + duplicates.length);
+        logger.debug(JSON.stringify(duplicates));
+
+        const arr2 = [{index: 1, toAccount: 'red'}, {index: 2, toAccount: 'green'}, {index: 3, toAccount: 'yellow'}, {index: 2, toAccount: 'green'}, {index: 1, toAccount: 'red'}];
+        duplicates = util.delDuplArr(arr2);
+        logger.debug('duplicates.length :' + duplicates.length);
+        logger.debug(JSON.stringify(duplicates));
+    }
     else if(cmd.slice(0,10) === define.CMD.TEST_SUBID)
     {
         // Current subId

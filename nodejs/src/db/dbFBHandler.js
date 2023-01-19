@@ -132,7 +132,7 @@ module.exports.getReplDataIS = async (blkNum, role, clusterP2pAddr) => {
     //
     if (!query_result.length)
     {
-        logger.error("Error - getReplData");
+        logger.error("Error - getReplDataIS");
     }
 
     return query_result;

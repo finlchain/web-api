@@ -43,7 +43,7 @@ module.exports.heartbeat = async (req, res) => {
 //     try {
 //         ret_msg = await cliContractProc.chkWalletInfoProc(reqBody);
 //     } catch (err) {
-//         logger.error("Error - 24");
+//         logger.error("Error - ");
 //     }
 
 //     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -61,7 +61,7 @@ module.exports.txMintNode = async (req, res) => {
     try {
         ret_msg = await cliContractProc.txMintNodeProc(reqBody);
     } catch (err) {
-        logger.error("Error - 25");
+        logger.error("Error - txMintNode");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -79,7 +79,7 @@ module.exports.chkUserNFT = async (req, res) => {
     try {
         ret_msg = await cliContractProc.chkUserNFTProc(reqBody);
     } catch (err) {
-        logger.error("Error - 26");
+        logger.error("Error - chkUserNFT");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -87,23 +87,6 @@ module.exports.chkUserNFT = async (req, res) => {
     res.send(ret_msg);
 }
 
-//
-module.exports.refundNft = async (req, res) => {
-    const reqBody = req.body;
-    let ret_msg = { errorCode : define.ERR_MSG.ERR_NO_DATA.CODE, contents : { res : false, msg : define.ERR_MSG.ERR_NO_DATA.MSG}};
-
-    logger.debug("func : refundNft");
-
-    try {
-        ret_msg = await cliContractProc.refundNftProc(reqBody);
-    } catch (err) {
-        logger.error("Error - 27");
-    }
-
-    logger.debug("ret_msg : " + JSON.stringify(ret_msg));
-
-    res.send(ret_msg);
-}
 //
 module.exports.txNft = async (req, res) => {
     const reqBody = req.body;
@@ -114,10 +97,11 @@ module.exports.txNft = async (req, res) => {
     try {
         ret_msg = await cliContractProc.txNftProc(reqBody);
     } catch (err) {
-        logger.error("Error - 28");
+        logger.error("Error - txNft");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
 
     res.send(ret_msg);
 }
+//

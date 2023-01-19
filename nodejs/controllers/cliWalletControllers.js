@@ -90,7 +90,7 @@ module.exports.toolJson = async (req, res) => {
             }
         } while(0);
     } catch (err) {
-        logger.error("Error - 39");
+        logger.error("Error - cliWalletControllers / toolJson");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -135,7 +135,7 @@ module.exports.keyGen = async (req, res) => {
     try {
         ret_msg = await cliWalletProc.keyGenProc(reqBody);
     } catch (err) {
-        logger.error("Error - 40");
+        logger.error("Error - keyGen");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
@@ -169,7 +169,7 @@ module.exports.getPubkey = async (req, res) => {
             }
         } while (0);
     } catch (err) {
-        logger.error("Error - 41");
+        logger.error("Error - getPubkey");
         logger.debug("ret_msg : " + JSON.stringify(ret_msg));
     }
 

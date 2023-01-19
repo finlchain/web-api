@@ -16,7 +16,6 @@ module.exports.X_PUBKEY_PEM_PATH = "./../../conf/key/me/x_pubkey.pem";
 module.exports.KEY_PATH = {
     PW_SEED: NETCONF_JSON.DEF_PATH.PW_DB_ME + '/' + NETCONF_JSON.DB.PW.NAME.SEED, 
     PW_MARIA : NETCONF_JSON.DEF_PATH.PW_DB_ME + '/' + NETCONF_JSON.DB.PW.NAME.MARIA, 
-    PW_REDIS : NETCONF_JSON.DEF_PATH.PW_DB_ME + '/' + NETCONF_JSON.DB.PW.NAME.REDIS, 
     IS_PUBKEY: NETCONF_JSON.DEF_PATH.KEY_REMOTE_IS + '/' + NETCONF_JSON.KEY.NAME.ED_PUBKEY, 
 }
 
@@ -28,11 +27,6 @@ module.exports.CFG_PATH = {
         DB_PORT : NETCONF_JSON.DB.MARIA.PORT, 
         DB_USER : NETCONF_JSON.DB.MARIA.USER, 
         PW_MARIA : cryptoSsl.aesDecPw(this.KEY_PATH.PW_SEED, this.KEY_PATH.PW_MARIA),
-    },
-    REDIS : {
-        HOST : NETCONF_JSON.DB.REDIS.HOST, 
-        PORT : NETCONF_JSON.DB.REDIS.PORT, 
-        PW_REDIS : cryptoSsl.aesDecPw(this.KEY_PATH.PW_SEED, this.KEY_PATH.PW_REDIS)
     },
     WEBAPI : {
         ISAG_PORT : NETCONF_JSON.WEBAPI.ISAG.PORT,
@@ -80,13 +74,6 @@ const getVerInfo = () => {
 module.exports.VERSION_INFO = getVerInfo();
 
 module.exports.IS_SIG_TYPE = this.KEY_PATH.IS_PUBKEY.includes("ed") ? "EDDSA" : "ECDSA";
-
-// Redis
-module.exports.REDIS_CONFIG = {
-    host : this.CFG_PATH.REDIS.HOST,
-    port : parseInt(this.CFG_PATH.REDIS.PORT),
-    password : this.CFG_PATH.REDIS.PW_REDIS,
-}
 
 module.exports.MARIA_CONFIG = {
     host: this.CFG_PATH.MARIA.DB_HOST,
@@ -201,18 +188,6 @@ module.exports.NFT_PORT = '14501';
 module.exports.NFT_CONFIG = {
     family : 4,
     host : this.FBNIN_URL,
-    port : this.NFT_PORT,
-    json : true,
-    headers : {
-        'Content-Type': 'application/json'
-    },
-    timeout: 10000
-}
-
-module.exports.SCH_URL = '175.207.29.22'
-module.exports.SCH_CONFIG = {
-    family : 4,
-    host : this.SCH_URL,
     port : this.NFT_PORT,
     json : true,
     headers : {

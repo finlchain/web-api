@@ -337,6 +337,35 @@ module.exports.isJsonString = (str) =>{
 }
 
 //
+module.exports.findDuplArrByField = (arr, targetField) => {
+    // const filtered = arr.filter((item, index) => arr.indexOf(item) !== index);
+    const filtered = arr.filter((item, index) => arr.findIndex(x => x[targetField] === item[targetField]) !== index);
+
+    return [...new Set(filtered)]
+}
+
+module.exports.delDuplArrByField = (arr, targetField) => {
+    // const filtered = arr.filter((item, index) => arr.indexOf(item) !== index);
+    const filtered = arr.filter((item, index) => arr.findIndex(x => x[targetField] === item[targetField]) === index);
+
+    return [...new Set(filtered)]
+}
+
+//
+module.exports.delDuplArr = (arr) => {
+    const myMap = new Map();
+
+    for(const character of arr){
+        logger.debug(JSON.stringify(character));
+        myMap.set(JSON.stringify(character), character);
+    }
+
+    let arrUnique = [...myMap.values()];
+
+    return arrUnique;
+}
+
+//
 module.exports.bytesToBuffer = (bytes) => {
     var buff = Buffer.alloc(bytes.byteLength);
     var view = new Uint8Array(bytes);

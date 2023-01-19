@@ -17,7 +17,7 @@ const kafkaHandler = require('./../src/net/kafkaHandler.js');
 const logger = require('./../src/utils/winlog.js');
 
 //
-const cliContractProc = require("./cliNodeNftContractControllersProc.js");
+const cliContractProc = require("./cliUserControllersProc.js");
 
 // POST
 //
@@ -32,7 +32,7 @@ module.exports.chkWalletInfo = async (req, res) => {
     try {
         ret_msg = await cliContractProc.chkWalletInfoProc(reqBody);
     } catch (err) {
-        logger.error("Error - 36");
+        logger.error("Error - chkWalletInfo");
     }
 
     logger.debug("ret_msg : " + JSON.stringify(ret_msg));
